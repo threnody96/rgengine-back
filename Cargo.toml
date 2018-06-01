@@ -1,0 +1,12 @@
+[package]
+name = "rgengine"
+version = "0.1.0"
+authors = ["Imota Eru"]
+
+[lib]
+name = "rgengine"
+
+[dependencies.sdl2]
+version = "0.31"
+default-features = false
+features = ["image", "ttf"]
