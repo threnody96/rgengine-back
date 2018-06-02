@@ -18,7 +18,7 @@ impl<T: RenderTarget> VirtualCanvas<T> {
     pub fn render_texture(&mut self, texture: &Texture, point: &Point, clip: &Option<Rect>) {
         let q = texture.query();
         let render_area = match clip {
-            None => { Rect::new(point.x().clone(), point.y().clone(), q.width.clone(), q.height.clone()) },
+            None => { Rect::new(0, 0, q.width.clone(), q.height.clone()) },
             Some(c) => {
                 c.clone()
             }
@@ -37,8 +37,8 @@ impl<T: RenderTarget> VirtualCanvas<T> {
                     Rect::new(
                         point.x().clone(), 
                         point.y().clone(), 
-                        render_area.width().clone(), 
-                        render_area.height().clone()
+                        r.width().clone(), 
+                        r.height().clone()
                     )
                 ).unwrap();
             }
