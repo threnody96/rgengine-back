@@ -24,22 +24,22 @@ impl<T: RenderTarget> VirtualCanvas<T> {
             }
         };
         match Self::overlap_rect(&self.rect, &render_area) {
-            None => {},
+            None => { println!("none"); },
             Some(r) => {
                 self.canvas.copy(
                     &texture,
-                    Rect::new(
+                    Some(Rect::new(
                         render_area.x().clone(),
                         render_area.y().clone(),
                         r.width().clone(),
                         r.height().clone()
-                    ),
-                    Rect::new(
+                    )),
+                    Some(Rect::new(
                         point.x().clone(), 
                         point.y().clone(), 
                         r.width().clone(), 
                         r.height().clone()
-                    )
+                    ))
                 ).unwrap();
             }
         };
@@ -47,7 +47,7 @@ impl<T: RenderTarget> VirtualCanvas<T> {
 
     fn overlap_rect(rect1: &Rect, rect2: &Rect) -> Option<Rect> {
         let l_x = max(rect1.x(), rect2.x());
-        let r_x = min(rect1.x() + (rect1.width() as i32), rect2.x());
+        let r_x = min(rect1.x() + (rect1.width() as i32), rect2.x() + (rect2.width() as i32));
         let u_y = max(rect1.y(), rect2.y());
         let b_y = min(rect1.y() + (rect1.height() as i32), rect2.y() + (rect2.height() as i32));
         if r_x - l_x < 0 || b_y - u_y < 0 { return None };
