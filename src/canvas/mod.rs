@@ -1,48 +1,40 @@
 extern crate sdl2;
 
-use canvas::sdl2::rect::{Point, Rect};
-use canvas::sdl2::render::{Canvas, Texture, RenderTarget};
+use self::sdl2::rect::{Rect};
+use self::sdl2::render::{ Canvas, Texture, TextureCreator };
+use self::sdl2::surface::Surface;
+use self::sdl2::video::Window;
 use std::cmp::{max, min};
 
-pub struct VirtualCanvas<T: RenderTarget> {
-    rect: Rect,
-    canvas: Canvas<T>,
+pub mod operation;
+
+#[derive(Clone)]
+pub struct VirtualCanvas {
+    rect: Option<Rect>
 }
 
-impl<T: RenderTarget> VirtualCanvas<T> {
+impl VirtualCanvas {
 
-    pub fn new(rect: Rect, canvas: Canvas<T>) -> Self {
-        Self { rect: rect, canvas: canvas }
+    pub fn new(canvas: &Canvas<Window>) -> Self {
+        let (w, h) = canvas.window().size();
+        Self { rect: Some(Rect::new(0, 0, w, h)) }
     }
 
-    pub fn render_texture(&mut self, texture: &Texture, point: &Point, clip: &Option<Rect>) {
-        let q = texture.query();
-        let render_area = match clip {
-            None => { Rect::new(0, 0, q.width.clone(), q.height.clone()) },
-            Some(c) => {
-                c.clone()
+    pub fn sub_canvas(&self, rect: Rect, f: Box<Fn(Self) -> i32>) -> i32 {
+        let sub_rect = match self.rect {
+            None => { None },
+            Some(current_rect) => {
+                let s = Rect::new(
+                    current_rect.x() + rect.x(),
+                    current_rect.y() + rect.y(),
+                    rect.width(),
+                    rect.height()
+                );
+                Self::overlap_rect(&current_rect, &s)
             }
         };
-        match Self::overlap_rect(&self.rect, &render_area) {
-            None => { println!("none"); },
-            Some(r) => {
-                self.canvas.copy(
-                    &texture,
-                    Some(Rect::new(
-                        render_area.x().clone(),
-                        render_area.y().clone(),
-                        r.width().clone(),
-                        r.height().clone()
-                    )),
-                    Some(Rect::new(
-                        point.x().clone(), 
-                        point.y().clone(), 
-                        r.width().clone(), 
-                        r.height().clone()
-                    ))
-                ).unwrap();
-            }
-        };
+        let sub_canvas = Self { rect: sub_rect };
+        f(sub_canvas)
     }
 
     fn overlap_rect(rect1: &Rect, rect2: &Rect) -> Option<Rect> {

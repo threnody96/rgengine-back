@@ -1,12 +1,17 @@
-pub trait Component {
+use super::canvas::operation::operation_set::OperationSet;
 
-    fn render(&self) {
-        // 自分をレンダリングする
-        // 子要素領域を新たに作る
-    }
-
+#[macro_export]
+macro_rules! render {
+    ( $e:expr ) => {
+        $e
+    };
+    ( $( $e:expr ),+ ) => {
+        {
+            let mut temp_opp = OperationSet::new();
+            $(
+                temp_opp.push($e),
+            )*
+            temp_opp
+        }
+    };
 }
-
-// 仮想描画領域、みたいなのが必要だね。
-// render メソッドは仮想描画領域。
-// リソースをロードしまくる必要がある、とかは NG
