@@ -1,47 +1,66 @@
 use storage::Storage;
 use util;
-use std::path::{ Path, PathBuf, MAIN_SEPARATOR };
-use std::fs::read_dir;
+use std::fs;
+use std::path::PathBuf;
+use std::fs::{ read_dir, ReadDir, DirBuilder };
+use std::io::{ BufWriter, Write };
+
+const SEPARATOR: char = '/';
 
 pub struct FileStorage {
-    current_path: PathBuf
+    storage_dir: PathBuf
 }
 
 impl FileStorage {
 
-    pub fn new() -> Self {
-        Self { current_path: util::exe_dir() }
-    }
-
-    fn split_path(&self, path: &str) -> PathBuf {
-        let paths: Vec<&str> = path.split(MAIN_SEPARATOR).collect();
-        let mut path = self.current_path.clone();
-        for p in &paths {
-            path.push(p);
+    pub fn new(dir: &str, mkdir: bool) -> Self {
+        let mut storage_dir = util::exe_dir();
+        storage_dir.push(dir);
+        if !storage_dir.exists() && mkdir {
+            DirBuilder::new().recursive(true).create(storage_dir.clone()).unwrap();
         }
-        path
+        if !storage_dir.exists() { panic!(format!("dir not found: {}", storage_dir.to_str().unwrap())); }
+        Self { storage_dir: storage_dir }
     }
 
-    fn search(&self, dir_paths: Vec<PathBuf>, file_paths: Vec<PathBuf>) -> Vec<PathBuf> {
-        let mut next_files: Vec<PathBuf> = vec![];
-        let mut next_dir_paths: Vec<PathBuf> = vec![];
-        for dir_path in &dir_paths {
-            let entries = read_dir(dir_path).unwrap();
-            for entry in entries {
-                let entry_path = entry.unwrap().path();
-                let next_path = dir_path.clone().join(entry_path.file_name().unwrap());
-                if entry_path.is_file() {
-                    next_files.push(entry_path);
-                } else {
-                    next_dir_paths.push(next_path);
-                }
+    fn convert_to_real_path(&self, path: &str) -> PathBuf {
+        let mut real_path = self.storage_dir.clone();
+        let paths: Vec<&str> = path.split(SEPARATOR).collect();
+        for p in &paths { real_path.push(p); }
+        real_path
+    }
+
+    fn classify_path(&self, base_dir: Option<String>, entries: ReadDir) -> (Vec<String>, Vec<String>) {
+        let mut files: Vec<String> = Vec::new();
+        let mut dirs: Vec<String> = Vec::new();
+        let prefix = match base_dir {
+            None => { "".to_owned() },
+            Some(bd) => { format!("{}{}", &bd, SEPARATOR).to_owned() }
+        };
+        for entry in entries {
+            let entry_path = entry.unwrap().path();
+            let file_name = entry_path.file_name().unwrap();
+            if entry_path.is_file() {
+                files.push(format!("{}{}", &prefix, &file_name.to_str().unwrap()));
+            } else {
+                dirs.push(format!("{}{}", &prefix, &file_name.to_str().unwrap()));
             }
         }
-        for fp in &file_paths {
-            next_files.push(fp.to_path_buf());
+        (dirs, files)
+    }
+
+    fn search(&self, dir_paths: Vec<String>, file_paths: Vec<String>) -> Result<Vec<String>, String> {
+        let mut next_files = file_paths.clone();
+        let mut next_dirs: Vec<String> = vec![];
+        for dir_path in &dir_paths {
+            let real_path = self.convert_to_real_path(&dir_path);
+            if !real_path.exists() { return Err(format!("dir not found: {}", real_path.to_str().unwrap())); }
+            let (dirs, files) = self.classify_path(Some(dir_path.to_owned()), read_dir(real_path).unwrap());
+            next_files.extend(files.iter().cloned());
+            next_dirs.extend(dirs.iter().cloned());
         }
-        if next_dir_paths.len() == 0 { return next_files; }
-        self.search(next_dir_paths, next_files)
+        if next_dirs.len() == 0 { return Ok(next_files); }
+        self.search(next_dirs, next_files)
     }
 
 }
@@ -49,18 +68,26 @@ impl FileStorage {
 impl Storage for FileStorage {
 
     fn load(&self, path: &str) -> Result<Vec<u8>, String> {
-        let pbuf = self.split_path(path);
+        let pbuf = self.convert_to_real_path(path);
         Ok(try!(util::load_file(pbuf.as_path())))
     }
 
-    fn list(&self, dir: Option<&str>) -> Result<Vec<PathBuf>, String> {
-        let d = dir.unwrap_or(".");
-        let path = Path::new(d).to_path_buf();
-        Ok(self.search(vec![path], vec![]))
+    fn list(&self, dir: Option<&str>) -> Result<Vec<String>, String> {
+        match dir {
+            None => {
+                let (dirs, files) = self.classify_path(None, read_dir(self.storage_dir.clone()).unwrap());
+                self.search(dirs, files)
+            },
+            Some(s) => { self.search(vec![s.to_owned()], vec![]) }
+        }
     }
 
     fn save(&self, path: &str, data: &Vec<u8>) -> Result<(), String> {
-        Ok(())
+        let real_path = self.convert_to_real_path(path);
+        let p = real_path.to_str().unwrap();
+        let mut f = BufWriter::new(fs::File::create(p).unwrap());
+        let r = f.write(data.as_slice());
+        if r.is_ok() { Ok(()) } else { Err("Write failed".to_owned()) }
     }
 
 }
