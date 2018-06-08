@@ -6,6 +6,9 @@ authors = ["Imota Eru <threnody96@gmail.com>"]
 [lib]
 name = "rgengine"
 
+[dependencies]
+regex = "1.0.0"
+
 [dependencies.sdl2]
 version = "0.31"
 default-features = false
