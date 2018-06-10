@@ -9,13 +9,13 @@ use self::sdl2::render::{ Texture, TextureCreator };
 use self::sdl2::rwops::RWops;
 use self::sdl2::image::ImageRWops;
 
-impl<'l, T: Storage, W>  ResourceLoader<'l, T, Texture<'l>> for TextureCreator<W> {
+impl<'l, W>  ResourceLoader<'l, Texture<'l>> for TextureCreator<W> {
 
     fn resource_name(&'l self) -> String {
         "texture".to_owned()
     }
 
-    fn load_resource(&'l self, storage: Rc<T>, path: &str) -> Result<Texture<'l>, String> {
+    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<Texture<'l>, String> {
         let resource = try!(storage.load(path));
         let rwops = RWops::from_bytes(resource.as_slice()).unwrap();
         let ext = Path::new(path).extension().unwrap().to_str().unwrap();
@@ -25,4 +25,4 @@ impl<'l, T: Storage, W>  ResourceLoader<'l, T, Texture<'l>> for TextureCreator<W
 
 }
 
-pub type TextureManager<'l, T, W> = ResourceManager<'l, Texture<'l>, T, TextureCreator<W>>;
+pub type TextureManager<'l, W> = ResourceManager<'l, Texture<'l>, TextureCreator<W>>;
