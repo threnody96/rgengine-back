@@ -1,4 +1,4 @@
-use storage::Storage;
+use super::Storage;
 use util;
 use std::fs;
 use std::path::PathBuf;
@@ -8,19 +8,20 @@ use std::io::{ BufWriter, Write };
 const SEPARATOR: char = '/';
 
 pub struct FileStorage {
+    name: String,
     storage_dir: PathBuf
 }
 
 impl FileStorage {
 
-    pub fn new(dir: &str, mkdir: bool) -> Self {
+    pub fn new(name: &str, dir: &str, mkdir: bool) -> Self {
         let mut storage_dir = util::exe_dir();
         storage_dir.push(dir);
         if !storage_dir.exists() && mkdir {
             DirBuilder::new().recursive(true).create(storage_dir.clone()).unwrap();
         }
         if !storage_dir.exists() { panic!(format!("dir not found: {}", storage_dir.to_str().unwrap())); }
-        Self { storage_dir: storage_dir }
+        Self { name: name.to_owned(), storage_dir: storage_dir }
     }
 
     fn convert_to_real_path(&self, path: &str) -> PathBuf {
@@ -66,6 +67,10 @@ impl FileStorage {
 }
 
 impl Storage for FileStorage {
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
 
     fn load(&self, path: &str) -> Result<Vec<u8>, String> {
         let pbuf = self.convert_to_real_path(path);

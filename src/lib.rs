@@ -1,4 +1,4 @@
-pub mod storage;
+pub mod resource;
 pub mod util;
 pub mod canvas;
 pub mod component;
