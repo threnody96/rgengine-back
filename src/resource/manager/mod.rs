@@ -1,21 +1,27 @@
+extern crate sdl2;
+
 use super::storage::Storage;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
+use self::texture::TextureManager;
+use self::plaindata::PlainDataManager;
+use self::sdl2::render::Texture;
 
-pub trait ResourceLoader<'l, L> {
-
+pub trait ResourceLoader<'l> {
+    type Item;
     fn resource_name(&'l self) -> String;
-    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<L, String>;
+    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String>;
 
 }
 
-pub struct ResourceManager<'l, L, R> where R: 'l + ResourceLoader<'l, L> {
-    cache: HashMap<String, Rc<L>>,
+pub struct ResourceManager<'l, R> where R: 'l + ResourceLoader<'l> {
+    cache: HashMap<String, Rc<R::Item>>,
     loader: &'l R,
     storages: HashMap<String, Rc<Box<Storage>>>
 }
 
-impl<'l, L, R> ResourceManager<'l, L, R> where R: 'l + ResourceLoader<'l, L> {
+impl<'l, R> ResourceManager<'l, R> where R: 'l + ResourceLoader<'l> {
 
     pub fn new(storages: Vec<Box<Storage>>, loader: &'l R) -> Self {
         Self { cache: HashMap::new(), loader: loader, storages: Self::convert_to_storage_map(storages) }
@@ -29,7 +35,7 @@ impl<'l, L, R> ResourceManager<'l, L, R> where R: 'l + ResourceLoader<'l, L> {
         storage_map
     }
 
-    pub fn load(&mut self, storage_name: &str, path: &str) -> Result<Rc<L>, String> {
+    pub fn load(&mut self, storage_name: &str, path: &str) -> Result<Rc<R::Item>, String> {
         let cache_key = Self::generate_cache_key(storage_name, path);
         let data = self.cache.get(&cache_key).cloned();
         match data {
@@ -53,6 +59,27 @@ impl<'l, L, R> ResourceManager<'l, L, R> where R: 'l + ResourceLoader<'l, L> {
 
     fn generate_cache_key(storage_name: &str, path: &str) -> String {
         format!("{}/{}", storage_name, path)
+    }
+
+}
+
+pub struct Resources<'l, W> where W: 'l {
+    texture: RefCell<TextureManager<'l, W>>,
+    plaindata: RefCell<PlainDataManager<'l>>
+}
+
+impl<'l, W> Resources<'l, W> {
+
+    pub fn new(texture: TextureManager<'l, W>, plaindata: PlainDataManager<'l>) -> Self {
+        Self { texture: RefCell::new(texture), plaindata: RefCell::new(plaindata) }
+    }
+
+    pub fn load_plaindata(&self, storage_name: &str, path: &str) -> Result<Rc<Vec<u8>>, String> {
+        self.plaindata.borrow_mut().load(storage_name, path)
+    }
+
+    pub fn load_texture(&self, storage_name: &str, path: &str) -> Result<Rc<Texture<'l>>, String> {
+        self.texture.borrow_mut().load(storage_name, path)
     }
 
 }
