@@ -1,12 +1,10 @@
-extern crate sdl2;
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use self::storage::Storage;
 use self::manager::texture::TextureManager;
 use self::manager::plaindata::{ PlainDataLoader, PlainDataManager };
-use self::sdl2::render::{ Texture, TextureCreator };
+use ::sdl2::render::{ Texture, TextureCreator };
 
 pub struct Resource<'l, W> where W: 'l {
     storages: HashMap<String, Rc<Box<Storage>>>,

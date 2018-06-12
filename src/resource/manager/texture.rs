@@ -1,13 +1,11 @@
-extern crate sdl2;
-
 use std::path::Path;
 use std::rc::Rc;
 use super::super::storage::Storage;
 use super::ResourceLoader;
 use super::ResourceManager;
-use self::sdl2::render::{ Texture, TextureCreator };
-use self::sdl2::rwops::RWops;
-use self::sdl2::image::ImageRWops;
+use ::sdl2::render::{ Texture, TextureCreator };
+use ::sdl2::rwops::RWops;
+use ::sdl2::image::ImageRWops;
 
 impl<'l, W>  ResourceLoader<'l> for TextureCreator<W> {
     type Item = Texture<'l>;

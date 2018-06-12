@@ -1,5 +1,3 @@
-extern crate sdl2;
-
 use super::storage::Storage;
 use std::collections::HashMap;
 use std::rc::Rc;

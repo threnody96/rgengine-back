@@ -1,32 +1,35 @@
-extern crate sdl2;
-
 use std::cell::RefCell;
-use self::sdl2::rect::{Rect, Point};
-use self::sdl2::render::{ Canvas, Texture, TextureCreator };
-use self::sdl2::video::Window;
+use ::sdl2::rect::{Rect, Point};
+use ::sdl2::render::{ Canvas, Texture, RenderTarget, TextureCreator };
 use std::cmp::{max, min};
+use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct VirtualCanvas<'l, T> where T: 'l {
-    canvas: &'l RefCell<Canvas<Window>>,
+pub struct VirtualCanvas<'l, W, T> where W: RenderTarget + 'l, T: 'l {
+    canvas: &'l RefCell<Canvas<W>>,
     texture_creator: &'l TextureCreator<T>,
+    texture: Option<Rc<Texture<'l>>>,
     rect: Option<Rect>
 }
 
-impl<'l, T> VirtualCanvas<'l, T> where T: 'l {
+impl<'l, W, T> VirtualCanvas<'l, W, T> where W: RenderTarget + 'l, T: 'l {
 
-    pub fn new(canvas: &'l RefCell<Canvas<Window>>, texture_creator: &'l TextureCreator<T>) -> Self {
-        let (w, h) = canvas.borrow().window().size();
-        Self { canvas: canvas, texture_creator: texture_creator, rect: Some(Rect::new(0, 0, w, h)) }
+    pub fn new(canvas: &'l RefCell<Canvas<W>>, rect: Rect, texture_creator: &'l TextureCreator<T>) -> Self {
+        Self {
+            canvas: canvas,
+            texture: Some(Rc::new(texture_creator.create_texture_static(None, rect.width(), rect.height()).unwrap())),
+            texture_creator: texture_creator,
+            rect: Some(rect)
+        }
     }
 
-    pub fn sub_canvas(&self, rect: Rect, f: Box<Fn(VirtualCanvas<'l, T>) + 'l>) {
+    pub fn sub_canvas(&self, rect: Rect, f: &'l Fn(VirtualCanvas<'l, W, T>)) {
         if self.rect.is_none() { 
-            f(Self { rect: None, .. *self });
+            f(Self { rect: None, texture: None, .. *self });
         } else {
             let cr = self.rect.unwrap();
             let nr = Rect::new(cr.x() + rect.x(), cr.y() + rect.y(), rect.width(), rect.height());
-            f(Self { rect: Self::overlap_rect(&cr, &nr), .. *self });
+            f(Self { rect: Self::overlap_rect(&cr, &nr), texture: Some(Rc::new(self.texture_creator.create_texture_static(None, 10, 10).unwrap())), .. *self });
         }
     }
 
