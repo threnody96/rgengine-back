@@ -6,15 +6,17 @@ use super::VirtualCanvas;
 impl<'l, T> VirtualCanvas<'l, T> where T: 'l {
 
     pub fn sub_canvas(&self, rect: Rect, f: &Fn(Rc<VirtualCanvas<'l, T>>)) {
-        let sub_canvas = Rc::new(self.create_sub_canvas(rect));
+        self.sub_alpha_canvas(rect, 255, f);
+    }
+
+    pub fn sub_alpha_canvas(&self, rect: Rect, alpha: u8, f: &Fn(Rc<VirtualCanvas<'l, T>>)) {
+        let sub_canvas = Rc::new(self.create_sub_canvas(rect, alpha));
         self.do_sub_canvas(sub_canvas.clone(), Point::new(rect.x(), rect.y()), f);
     }
 
-    fn create_sub_canvas(&self, rect: Rect) -> VirtualCanvas<'l, T> {
-        let mut vcanvas = self.texture_creator.create_texture_target(None, rect.width(), rect.height()).unwrap();
-        self.canvas.borrow_mut().with_texture_canvas(&mut vcanvas, |c| {
-            c.copy(&self.vcanvas.borrow(), Some(rect), Some(Rect::new(0, 0, rect.width(), rect.height()))).unwrap();
-        }).unwrap();
+    fn create_sub_canvas(&self, rect: Rect, alpha: u8) -> VirtualCanvas<'l, T> {
+        let mut vcanvas = Self::create_new_vcanvas(&self.texture_creator, rect.width(), rect.height());
+        vcanvas.set_alpha_mod(alpha);
         Self { vcanvas: RefCell::new(vcanvas), .. *self }
     }
 
