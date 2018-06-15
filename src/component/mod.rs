@@ -11,10 +11,9 @@ pub struct ComponentOption {
     pub alpha: u8
 }
 
-pub struct Component<'l, P, S> {
+pub struct Component<'l, P> {
     option: ComponentOption,
-    props: P,
-    state: RefCell<S>,
+    props: RefCell<P>,
     operations: RefCell<Vec<Operation<'l>>>
 }
 
@@ -22,18 +21,18 @@ pub trait RenderableComponent {
     fn render(&self);
 }
 
-impl<'l, P, S> Component<'l, P, S> {
+impl<'l, P> Component<'l, P> {
     
-    pub fn new(option: ComponentOption, props: P, state: S) -> Self {
-        Self { option: option, props: props, state: RefCell::new(state), operations: RefCell::new(Vec::new()) }
+    pub fn new(option: ComponentOption, props: RefCell<P>) -> Self {
+        Self { option: option, props: props, operations: RefCell::new(Vec::new()) }
     }
 
     fn regist(&self, operation: Operation<'l>) {
         self.operations.borrow_mut().push(operation);
     }
 
-    pub fn execute<CP, CS>(&self, child_component: Component<'l, CP, CS>)
-        where Component<'l, CP, CS>: RenderableComponent {
+    pub fn execute<CP>(&self, child_component: Component<'l, CP>)
+        where Component<'l, CP>: RenderableComponent {
         child_component.render();
         let operation = child_component.emit();
         if operation.is_some() { self.regist(operation.unwrap()); }
@@ -47,17 +46,18 @@ impl<'l, P, S> Component<'l, P, S> {
         Some(Operation::Group { option: self.option, operations: operations })
     }
 
-    pub fn copy(&self, t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>) {
-        self.regist(Operation::Copy { t: t, p: p, clip: clip });
+    pub fn copy(&self, t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, angle: f64) {
+        self.regist(Operation::Copy { t: t, p: p, clip: clip, angle: angle });
     }
 
-    pub fn zoom(&self, t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>) {
+    pub fn zoom(&self, t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) {
         self.regist(Operation::Zoom {
             t: t,
             p: p,
             clip: clip,
             zoom_x: zoom_x,
-            zoom_y: zoom_y
+            zoom_y: zoom_y,
+            angle: angle
         });
     }
 

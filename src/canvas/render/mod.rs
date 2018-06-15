@@ -14,12 +14,12 @@ impl<'l, T> VirtualCanvas<'l, T> where T: 'l {
         self.canvas.borrow_mut().present();
     }
 
-    pub fn copy(&self, t: &Texture<'l>, p: Point, clip: Option<Rect>) -> Result<(), String> {
+    pub fn copy(&self, t: &Texture<'l>, p: Point, clip: Option<Rect>, angle: f64) -> Result<(), String> {
         let draw_rect = self.get_draw_rect(&t, p, clip);
-        self.sub_canvas_copy(&t, clip, draw_rect)
+        self.vcanvas_copy(&t, clip, draw_rect, angle)
     }
 
-    pub fn zoom(&self, t: &Texture<'l>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>) -> Result<(), String> {
+    pub fn zoom(&self, t: &Texture<'l>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) -> Result<(), String> {
         let tmp_draw_rect = self.get_draw_rect(&t, p, clip);
         let draw_rect = Rect::new(
             tmp_draw_rect.x(),
@@ -27,12 +27,12 @@ impl<'l, T> VirtualCanvas<'l, T> where T: 'l {
             ((tmp_draw_rect.width() as f32) * zoom_x.unwrap_or(1.0)) as u32,
             ((tmp_draw_rect.height() as f32) * zoom_y.unwrap_or(1.0)) as u32,
         );
-        self.sub_canvas_copy(&t, clip, draw_rect)
+        self.vcanvas_copy(&t, clip, draw_rect, angle)
     }
 
-    fn sub_canvas_copy(&self, t: &Texture<'l>, src: Option<Rect>, dst: Rect) -> Result<(), String> {
+    fn vcanvas_copy(&self, t: &Texture<'l>, src: Option<Rect>, dst: Rect, angle: f64) -> Result<(), String> {
         self.canvas.borrow_mut().with_texture_canvas(&mut self.vcanvas.borrow_mut(), |c| {
-            c.copy(&t, src, Some(dst)).unwrap();
+            c.copy_ex(&t, src, Some(dst), angle, None, false, false).unwrap();
         }).map_err(|_| "sub canvas render error".to_owned())
     }
 

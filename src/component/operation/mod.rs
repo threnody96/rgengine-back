@@ -10,7 +10,7 @@ pub trait OperationExecuter<'l> {
 #[derive(Clone)]
 pub enum Operation<'l> {
     Group { option: ComponentOption, operations: Vec<Operation<'l>> },
-    Copy { t: Rc<Texture<'l>>, p: Point, clip: Option<Rect> },
-    Zoom { t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32> }
+    Copy { t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, angle: f64 },
+    Zoom { t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64 }
 }
 
