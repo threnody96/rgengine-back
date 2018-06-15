@@ -6,5 +6,4 @@ pub mod canvas;
 pub mod component;
 
 pub fn run() {
-
 }
