@@ -6,8 +6,9 @@ use super::ResourceManager;
 use ::sdl2::render::{ Texture, TextureCreator };
 use ::sdl2::rwops::RWops;
 use ::sdl2::image::ImageRWops;
+use ::sdl2::video::WindowContext;
 
-impl<'l, W>  ResourceLoader<'l> for TextureCreator<W> {
+impl<'l>  ResourceLoader<'l> for TextureCreator<WindowContext> {
     type Item = Texture<'l>;
     fn resource_name(&'l self) -> String {
         "texture".to_owned()
@@ -23,4 +24,4 @@ impl<'l, W>  ResourceLoader<'l> for TextureCreator<W> {
 
 }
 
-pub type TextureManager<'l, W> = ResourceManager<'l, TextureCreator<W>>;
+pub type TextureManager<'l> = ResourceManager<'l, TextureCreator<WindowContext>>;

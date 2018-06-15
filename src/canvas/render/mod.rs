@@ -2,7 +2,7 @@ use ::sdl2::rect::{ Point, Rect };
 use ::sdl2::render::Texture;
 use super::VirtualCanvas;
 
-impl<'l, T> VirtualCanvas<'l, T> where T: 'l {
+impl<'l> VirtualCanvas<'l> {
 
     pub fn render(&self) {
         let tq = self.vcanvas.borrow().query();

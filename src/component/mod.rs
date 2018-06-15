@@ -31,7 +31,7 @@ impl<'l, P> Component<'l, P> {
         self.operations.borrow_mut().push(operation);
     }
 
-    pub fn execute<CP>(&self, child_component: Component<'l, CP>)
+    pub fn execute<CP>(&self, child_component: &Component<'l, CP>)
         where Component<'l, CP>: RenderableComponent {
         child_component.render();
         let operation = child_component.emit();

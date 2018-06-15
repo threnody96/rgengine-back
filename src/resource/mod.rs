@@ -4,17 +4,18 @@ use std::rc::Rc;
 use self::storage::Storage;
 use self::manager::texture::TextureManager;
 use self::manager::plaindata::{ PlainDataLoader, PlainDataManager };
+use ::sdl2::video::WindowContext;
 use ::sdl2::render::{ Texture, TextureCreator };
 
-pub struct Resource<'l, W> where W: 'l {
+pub struct Resource<'l> {
     storages: HashMap<String, Rc<Box<Storage>>>,
     plaindata: RefCell<PlainDataManager<'l>>,
-    texture: RefCell<TextureManager<'l, W>>
+    texture: RefCell<TextureManager<'l>>
 }
 
-impl<'l, W> Resource<'l, W> {
+impl<'l> Resource<'l> {
 
-    pub fn new(storages:Vec<Box<Storage>>, pl: &'l PlainDataLoader, tc: &'l TextureCreator<W>) -> Self {
+    pub fn new(storages:Vec<Box<Storage>>, pl: &'l PlainDataLoader, tc: &'l TextureCreator<WindowContext>) -> Self {
         Self {
             storages: Self::convert_to_storage_map(storages),
             plaindata: RefCell::new(PlainDataManager::new(pl)),
