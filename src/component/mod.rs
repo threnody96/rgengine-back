@@ -11,46 +11,43 @@ pub struct ComponentOption {
     pub alpha: u8
 }
 
-pub trait ComponentProps {
-    fn update(&self, next_props: Self);
-}
-
-pub struct Component<P: ComponentProps> {
+pub struct Component<P> {
     pub props: RefCell<P>,
     operations: RefCell<Vec<Operation>>,
-    renderer: Box<ComponentRenderer<P>>
+    core: Box<ComponentCore<P>>
 }
 
-pub trait ComponentRenderer<P: ComponentProps> {
+pub trait ComponentCore<P> {
     fn option(&self, c: &Component<P>) -> ComponentOption;
-    fn update_props(&self, c: &Component<P>, P);
+    fn update_child_props(&self, c: &Component<P>);
     fn render(&self, c: &Component<P>);
 }
 
-impl<P: ComponentProps> Component<P> {
+impl<P> Component<P> {
     
-    pub fn new(renderer: Box<ComponentRenderer<P>>, props: P) -> Self {
-        Self { renderer: renderer, props: RefCell::new(props), operations: RefCell::new(Vec::new()) }
+    pub fn new(core: Box<ComponentCore<P>>, props: P) -> Self {
+        Self { core: core, props: RefCell::new(props), operations: RefCell::new(Vec::new()) }
     }
 
     fn regist(&self, operation: Operation) {
         self.operations.borrow_mut().push(operation);
     }
 
+    pub fn update_props(&self, next_props: P) {
+        self.props.replace(next_props);
+        self.core.update_child_props(self);
+    }
+
     fn option(&self) -> ComponentOption {
-        self.renderer.option(self)
+        self.core.option(self)
     }
 
     pub fn render(&self) -> &Self {
-        self.renderer.render(self);
+        self.core.render(self);
         self
     }
 
-    pub fn update_props(&self, next_props: P) {
-        self.renderer.update_props(self, next_props);
-    }
-
-    pub fn execute<CP: ComponentProps>(&self, child_component: Rc<Component<CP>>) {
+    pub fn execute<CP>(&self, child_component: Rc<Component<CP>>) {
         let operation = child_component.render().emit(true);
         if operation.is_some() { self.regist(operation.unwrap()); }
     }
