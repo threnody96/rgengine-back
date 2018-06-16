@@ -12,38 +12,41 @@ pub struct ComponentOption {
 }
 
 pub struct Component<'l, P> {
-    option: ComponentOption,
-    props: RefCell<P>,
-    operations: RefCell<Vec<Operation<'l>>>
+    pub props: RefCell<P>,
+    operations: RefCell<Vec<Operation<'l>>>,
+    renderer: Box<ComponentRenderer<'l, P>>
 }
 
-pub trait RenderableComponent {
-    fn render(&self);
+pub trait ComponentRenderer<'l, P> {
+    fn render(&self, c: &'l Component<'l, P>);
 }
 
 impl<'l, P> Component<'l, P> {
     
-    pub fn new(option: ComponentOption, props: RefCell<P>) -> Self {
-        Self { option: option, props: props, operations: RefCell::new(Vec::new()) }
+    pub fn new(renderer: Box<ComponentRenderer<'l, P>>, props: P) -> Self {
+        Self { renderer: renderer, props: RefCell::new(props), operations: RefCell::new(Vec::new()) }
     }
 
     fn regist(&self, operation: Operation<'l>) {
         self.operations.borrow_mut().push(operation);
     }
 
-    pub fn execute<CP>(&self, child_component: &Component<'l, CP>)
-        where Component<'l, CP>: RenderableComponent {
+    pub fn render(&'l self) {
+        self.renderer.render(self);
+    }
+
+    pub fn execute<CP>(&self, option: ComponentOption, child_component: &'l Component<'l, CP>) {
         child_component.render();
-        let operation = child_component.emit();
+        let operation = child_component.emit(option);
         if operation.is_some() { self.regist(operation.unwrap()); }
     }
 
-    pub fn emit(&self) -> Option<Operation<'l>> {
+    pub fn emit(&self, option: ComponentOption) -> Option<Operation<'l>> {
         let mut orig_operations = self.operations.borrow_mut();
         let mut operations: Vec<Operation> = Vec::new();
         while orig_operations.len() > 0 { operations.push(orig_operations.remove(0)); }
         if operations.len() == 0 { return None; }
-        Some(Operation::Group { option: self.option, operations: operations })
+        Some(Operation::Group { option: option, operations: operations })
     }
 
     pub fn copy(&self, t: Rc<Texture<'l>>, p: Point, clip: Option<Rect>, angle: f64) {
