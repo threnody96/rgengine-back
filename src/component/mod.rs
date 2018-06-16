@@ -11,18 +11,23 @@ pub struct ComponentOption {
     pub alpha: u8
 }
 
-pub struct Component<P> {
+pub trait ComponentProps {
+    fn update(&self, next_props: Self);
+}
+
+pub struct Component<P: ComponentProps> {
     pub props: RefCell<P>,
     operations: RefCell<Vec<Operation>>,
     renderer: Box<ComponentRenderer<P>>
 }
 
-pub trait ComponentRenderer<P> {
-    fn option(&self) -> ComponentOption;
+pub trait ComponentRenderer<P: ComponentProps> {
+    fn option(&self, c: &Component<P>) -> ComponentOption;
+    fn update_props(&self, c: &Component<P>, P);
     fn render(&self, c: &Component<P>);
 }
 
-impl<P> Component<P> {
+impl<P: ComponentProps> Component<P> {
     
     pub fn new(renderer: Box<ComponentRenderer<P>>, props: P) -> Self {
         Self { renderer: renderer, props: RefCell::new(props), operations: RefCell::new(Vec::new()) }
@@ -32,12 +37,20 @@ impl<P> Component<P> {
         self.operations.borrow_mut().push(operation);
     }
 
+    fn option(&self) -> ComponentOption {
+        self.renderer.option(self)
+    }
+
     pub fn render(&self) -> &Self {
         self.renderer.render(self);
         self
     }
 
-    pub fn execute<CP>(&self, child_component: Rc<Component<CP>>) {
+    pub fn update_props(&self, next_props: P) {
+        self.renderer.update_props(self, next_props);
+    }
+
+    pub fn execute<CP: ComponentProps>(&self, child_component: Rc<Component<CP>>) {
         let operation = child_component.render().emit(true);
         if operation.is_some() { self.regist(operation.unwrap()); }
     }
@@ -47,7 +60,7 @@ impl<P> Component<P> {
         let mut operations: Vec<Operation> = Vec::new();
         while orig_operations.len() > 0 { operations.push(orig_operations.remove(0)); }
         if compress && operations.len() == 0 { return None; }
-        Some(Operation::Group { option: self.renderer.option(), operations: operations })
+        Some(Operation::Group { option: self.option(), operations: operations })
     }
 
     pub fn copy(&self, t: Rc<Texture>, p: Point, clip: Option<Rect>, angle: f64) {
