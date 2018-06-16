@@ -2,20 +2,20 @@ use super::storage::Storage;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-pub trait ResourceLoader<'l> {
+pub trait ResourceLoader {
     type Item;
-    fn resource_name(&'l self) -> String;
-    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String>;
+    fn resource_name(&self) -> String;
+    fn load_resource(&self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String>;
 }
 
-pub struct ResourceManager<'l, R> where R: 'l + ResourceLoader<'l> {
+pub struct ResourceManager<R> where R: ResourceLoader {
     cache: HashMap<String, Rc<R::Item>>,
-    loader: &'l R,
+    loader: Rc<R>,
 }
 
-impl<'l, R> ResourceManager<'l, R> where R: 'l + ResourceLoader<'l> {
+impl<R> ResourceManager<R> where R: ResourceLoader {
 
-    pub fn new(loader: &'l R) -> Self {
+    pub fn new(loader: Rc<R>) -> Self {
         Self { cache: HashMap::new(), loader: loader }
     }
 

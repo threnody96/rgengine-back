@@ -13,17 +13,17 @@ impl PlainDataLoader {
 
 }
 
-impl<'l> ResourceLoader<'l> for PlainDataLoader {
+impl ResourceLoader for PlainDataLoader {
 
     type Item = Vec<u8>;
-    fn resource_name(&'l self) -> String {
+    fn resource_name(&self) -> String {
         "plaindata".to_owned()
     }
 
-    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String> {
+    fn load_resource(&self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String> {
         storage.load(path)
     }
 
 }
 
-pub type PlainDataManager<'l> = ResourceManager<'l, PlainDataLoader>;
+pub type PlainDataManager = ResourceManager<PlainDataLoader>;

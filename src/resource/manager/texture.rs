@@ -8,13 +8,13 @@ use ::sdl2::rwops::RWops;
 use ::sdl2::image::ImageRWops;
 use ::sdl2::video::WindowContext;
 
-impl<'l>  ResourceLoader<'l> for TextureCreator<WindowContext> {
-    type Item = Texture<'l>;
-    fn resource_name(&'l self) -> String {
+impl ResourceLoader for TextureCreator<WindowContext> {
+    type Item = Texture;
+    fn resource_name(&self) -> String {
         "texture".to_owned()
     }
 
-    fn load_resource(&'l self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String> {
+    fn load_resource(&self, storage: Rc<Box<Storage>>, path: &str) -> Result<Self::Item, String> {
         let resource = try!(storage.load(path));
         let rwops = RWops::from_bytes(resource.as_slice()).unwrap();
         let ext = Path::new(path).extension().unwrap().to_str().unwrap();
@@ -24,4 +24,4 @@ impl<'l>  ResourceLoader<'l> for TextureCreator<WindowContext> {
 
 }
 
-pub type TextureManager<'l> = ResourceManager<'l, TextureCreator<WindowContext>>;
+pub type TextureManager = ResourceManager<TextureCreator<WindowContext>>;

@@ -4,7 +4,7 @@ use super::super::component::ComponentOption;
 use super::super::component::operation::Operation;
 use super::super::component::operation::OperationExecuter;
 
-impl<'l> VirtualCanvas<'l> {
+impl VirtualCanvas {
 
     fn convert_coption_to_vcoption(&self, option: ComponentOption) -> VirtualCanvasOption {
         VirtualCanvasOption {
@@ -16,9 +16,9 @@ impl<'l> VirtualCanvas<'l> {
 
 }
 
-impl<'l> OperationExecuter<'l> for VirtualCanvas<'l> {
+impl OperationExecuter for VirtualCanvas {
 
-    fn operation_execute(&self, operation: &Operation<'l>) {
+    fn operation_execute(&self, operation: &Operation) {
         match operation {
             Operation::Group { option, operations } => {
                 self.sub_canvas(self.convert_coption_to_vcoption(option.clone()), &|c| {

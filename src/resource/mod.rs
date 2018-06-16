@@ -7,15 +7,15 @@ use self::manager::plaindata::{ PlainDataLoader, PlainDataManager };
 use ::sdl2::video::WindowContext;
 use ::sdl2::render::{ Texture, TextureCreator };
 
-pub struct Resource<'l> {
+pub struct Resource {
     storages: HashMap<String, Rc<Box<Storage>>>,
-    plaindata: RefCell<PlainDataManager<'l>>,
-    texture: RefCell<TextureManager<'l>>
+    plaindata: RefCell<PlainDataManager>,
+    texture: RefCell<TextureManager>
 }
 
-impl<'l> Resource<'l> {
+impl Resource {
 
-    pub fn new(storages:Vec<Box<Storage>>, pl: &'l PlainDataLoader, tc: &'l TextureCreator<WindowContext>) -> Self {
+    pub fn new(storages:Vec<Box<Storage>>, pl: Rc<PlainDataLoader>, tc: Rc<TextureCreator<WindowContext>>) -> Self {
         Self {
             storages: Self::convert_to_storage_map(storages),
             plaindata: RefCell::new(PlainDataManager::new(pl)),
@@ -27,7 +27,7 @@ impl<'l> Resource<'l> {
         self.plaindata.borrow_mut().load(try!(self.get_storage(storage_name)), path)
     }
 
-    pub fn load_texture(&self, storage_name: &str, path: &str) -> Result<Rc<Texture<'l>>, String> {
+    pub fn load_texture(&self, storage_name: &str, path: &str) -> Result<Rc<Texture>, String> {
         self.texture.borrow_mut().load(try!(self.get_storage(storage_name)), path)
     }
 
