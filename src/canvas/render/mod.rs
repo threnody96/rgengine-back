@@ -1,17 +1,41 @@
+use std::rc::Rc;
+use std::cell::{ Ref, RefMut, RefCell };
 use ::sdl2::rect::{ Point, Rect };
-use ::sdl2::render::Texture;
+use ::sdl2::render::{ Canvas, Texture, BlendMode };
+use ::sdl2::pixels::{ Color, PixelFormatEnum };
+use ::sdl2::video::Window;
 use super::VirtualCanvas;
 
-impl VirtualCanvas {
+pub struct TextureRenderer {
+    canvas: Rc<RefCell<Canvas<Window>>>,
+    texture: RefCell<Texture>
+}
 
-    pub fn render_to_real_canvas(&self) {
-        let tq = self.vcanvas.borrow().query();
-        self.canvas.borrow_mut().copy(
-            &self.vcanvas.borrow(),
-            None,
-            Rect::new(0, 0, tq.width, tq.height)
-        ).unwrap();
-        self.canvas.borrow_mut().present();
+impl TextureRenderer {
+
+    pub fn new(canvas: Rc<RefCell<Canvas<Window>>>, texture: RefCell<Texture>) -> Self {
+        Self { canvas: canvas, texture: texture }
+    }
+
+    pub fn borrow(&self) -> Ref<Texture> { self.texture.borrow() }
+
+    pub fn borrow_mut(&self) -> RefMut<Texture> { self.texture.borrow_mut() }
+
+    pub fn width(&self) -> u32 { self.borrow().query().width }
+
+    pub fn height(&self) -> u32 { self.borrow().query().height }
+
+    pub fn set_blend_mode(&self, mode: BlendMode) {
+        self.borrow_mut().set_blend_mode(mode);
+    }
+
+    pub fn clear(&self, color: Color) -> Result<(), String> {
+        self.vcanvas_render(|c| {
+            let current_color = c.draw_color();
+            c.set_draw_color(color);
+            c.clear();
+            c.set_draw_color(current_color);
+        })
     }
 
     pub fn copy(&self, t: &Texture, p: Point, clip: Option<Rect>, angle: f64) -> Result<(), String> {
@@ -31,15 +55,19 @@ impl VirtualCanvas {
     }
 
     fn vcanvas_copy(&self, t: &Texture, src: Option<Rect>, dst: Rect, angle: f64) -> Result<(), String> {
-        self.canvas.borrow_mut().with_texture_canvas(&mut self.vcanvas.borrow_mut(), |c| {
+        self.vcanvas_render(|c| {
             c.copy_ex(&t, src, Self::convert_to_center_base_dst(dst, angle), angle, None, false, false).unwrap();
-        }).map_err(|_| "sub canvas render error".to_owned())
+        })
+    }
+
+    fn vcanvas_render<F>(&self, f: F) -> Result<(), String> where for<'r> F: FnOnce(&'r mut Canvas<Window>,) {
+        self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), f).map_err(|_| "sub canvas render error".to_owned())
     }
 
     fn convert_to_center_base_dst(dst: Rect, angle: f64) -> Rect {
         let c = Rect::from_center(Point::new(dst.x(), dst.y()), dst.width(), dst.height());
         if angle == 0.0 { return c; }
-        let bc = Self::calc_bounding_rect(dst, angle).center();
+        let bc = VirtualCanvas::calc_bounding_rect(dst, angle).center();
         let cc = c.center();
         Rect::new(dst.x() + (cc.x() - bc.x()), dst.y() + (cc.y() - bc.y()), dst.width(), dst.height())
     }

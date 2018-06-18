@@ -4,6 +4,7 @@ use ::sdl2::rect::{ Point, Rect };
 use ::sdl2::render::{ BlendMode, Texture };
 use ::sdl2::pixels::{ Color, PixelFormatEnum };
 use super::{ VirtualCanvas, VirtualCanvasOption };
+use super::render::TextureRenderer;
 
 impl VirtualCanvas {
 
@@ -12,20 +13,19 @@ impl VirtualCanvas {
         self.do_sub_canvas(sub_canvas.clone(), f);
     }
 
-    fn create_new_sub_vcanvas(&self, br: Rect) -> Texture {
-        let mut vcanvas = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, br.width(), br.height()).unwrap();
-        vcanvas.set_blend_mode(BlendMode::Blend);
-        self.canvas.borrow_mut().with_texture_canvas(&mut vcanvas, |sc| {
-            sc.copy(&self.vcanvas.borrow(), br, Rect::new(0, 0, br.width(), br.height())).unwrap();
-        }).unwrap();
-        vcanvas
+    fn create_new_sub_vcanvas(&self, br: Rect) -> TextureRenderer {
+        let vcanvas = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, br.width(), br.height()).unwrap();
+        let tr = TextureRenderer::new(self.canvas.clone(), RefCell::new(vcanvas));
+        tr.set_blend_mode(BlendMode::Blend);
+        tr.copy(&self.vcanvas.borrow(), br.center(), None, 0.0);
+        tr
     }
 
     fn create_sub_canvas(&self, option: VirtualCanvasOption) -> VirtualCanvas {
         let br = Self::calc_bounding_rect(option.position, option.angle);
         Self {
             canvas: self.canvas.clone(),
-            vcanvas: RefCell::new(self.create_new_sub_vcanvas(br)),
+            vcanvas: self.create_new_sub_vcanvas(br),
             texture_creator: self.texture_creator.clone(),
             bounding_rect: br,
             option: option
@@ -35,35 +35,24 @@ impl VirtualCanvas {
     fn do_sub_canvas(&self, sub_canvas: Rc<VirtualCanvas>, f: &Fn(Rc<VirtualCanvas>)) {
         let p = Point::new(sub_canvas.option.position.x(), sub_canvas.option.position.y());
         f(sub_canvas.clone());
-        self.copy(&sub_canvas.vcanvas.borrow(), p, None, sub_canvas.option.angle).unwrap();
+        self.copy_sub_canvas(sub_canvas);
     }
 
     fn copy_sub_canvas(&self, sub_canvas: Rc<VirtualCanvas>) {
-        let o = Rc::new(sub_canvas.create_transparent_object());
-
+        let object = Rc::new(sub_canvas.create_transparent_object());
     }
 
-    fn create_sub_canvas_mask(&self, object: Rc<Texture>) -> Texture {
-        let br = self.bounding_rect;
-        let mut mask = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, br.width(), br.height()).unwrap();
-        self.canvas.borrow_mut().with_texture_canvas(&mut mask, |sc| {
-            sc.set_blend_mode(BlendMode::None);
-            sc.set_draw_color(Self::default_color());
-            sc.clear();
-            sc.copy_ex(&object, None, self.option.position, self.option.angle, None, false, false).unwrap();
-        }).unwrap();
-        mask.set_blend_mode(BlendMode::Blend);
-        mask
-    }
-
-    fn create_transparent_object(&self) -> Texture {
+    fn create_transparent_object(&self) -> TextureRenderer {
         let p = self.option.position;
-        let mut o = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, p.width(), p.height()).unwrap();
-        self.canvas.borrow_mut().with_texture_canvas(&mut o, |sc| {
-            sc.set_blend_mode(BlendMode::None);
-            sc.set_draw_color(Color::RGBA(0, 0, 0, 0));
-        }).unwrap();
-        o
+        let object = self.create_renderer(p.width(), p.height());
+        object.set_blend_mode(BlendMode::None);
+        object.clear(Color::RGBA(0, 0, 0, 0)).unwrap();
+        object
+    }
+
+    fn create_renderer(&self, width: u32, height: u32) -> TextureRenderer {
+        let o = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, width, height).unwrap();
+        TextureRenderer::new(self.canvas.clone(), RefCell::new(o))
     }
 
 }

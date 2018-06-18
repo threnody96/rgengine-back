@@ -4,6 +4,7 @@ use ::sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use ::sdl2::pixels::{ Color, PixelFormatEnum };
 use ::sdl2::rect::Rect;
 use ::sdl2::video::{ Window, WindowContext };
+use self::render::TextureRenderer;
 
 #[derive(Clone,Copy)]
 pub struct VirtualCanvasOption {
@@ -15,7 +16,7 @@ pub struct VirtualCanvasOption {
 
 pub struct VirtualCanvas {
     canvas: Rc<RefCell<Canvas<Window>>>,
-    vcanvas: RefCell<Texture>,
+    vcanvas: TextureRenderer,
     texture_creator: Rc<TextureCreator<WindowContext>>,
     bounding_rect: Rect,
     option: VirtualCanvasOption
@@ -29,7 +30,7 @@ impl VirtualCanvas {
         Self::initialize_canvas(canvas.clone());
         Self {
             canvas: canvas.clone(),
-            vcanvas: RefCell::new(Self::create_new_vcanvas(canvas.clone(), texture_creator.clone(), option)),
+            vcanvas: Self::create_new_vcanvas(canvas.clone(), texture_creator.clone(), option),
             texture_creator: texture_creator,
             bounding_rect: Self::calc_bounding_rect(option.position, option.angle),
             option: option
@@ -41,7 +42,7 @@ impl VirtualCanvas {
         c.set_blend_mode(BlendMode::Blend);
     }
 
-    fn create_new_vcanvas(canvas: Rc<RefCell<Canvas<Window>>>, tc: Rc<TextureCreator<WindowContext>>, option: VirtualCanvasOption) -> Texture {
+    fn create_new_vcanvas(canvas: Rc<RefCell<Canvas<Window>>>, tc: Rc<TextureCreator<WindowContext>>, option: VirtualCanvasOption) -> TextureRenderer {
         let p = option.position;
         let mut vcanvas = tc.create_texture_target(PixelFormatEnum::ARGB8888, p.width(), p.height()).unwrap();
         vcanvas.set_blend_mode(option.mode);
@@ -49,7 +50,16 @@ impl VirtualCanvas {
             sc.set_draw_color(Self::default_color());
             sc.clear();
         }).unwrap();
-        vcanvas
+        TextureRenderer::new(canvas.clone(), RefCell::new(vcanvas))
+    }
+
+    pub fn render_to_real_canvas(&self) {
+        self.canvas.borrow_mut().copy(
+            &self.vcanvas.borrow(),
+            None,
+            Rect::new(0, 0, self.vcanvas.width(), self.vcanvas.height())
+        ).unwrap();
+        self.canvas.borrow_mut().present();
     }
 
     fn default_color() -> Color {
