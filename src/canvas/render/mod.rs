@@ -25,16 +25,23 @@ impl TextureRenderer {
 
     pub fn height(&self) -> u32 { self.borrow().query().height }
 
+    pub fn center(&self) -> Point { Point::new(self.width() as i32 / 2, self.height() as i32 / 2) }
+
+    pub fn fill_rect(&self, color: Color, rect: Rect) {
+        self.vcanvas_render(|c| {
+            c.set_draw_color(color);
+            c.fill_rect(rect);
+        });
+    }
+
     pub fn set_blend_mode(&self, mode: BlendMode) {
         self.borrow_mut().set_blend_mode(mode);
     }
 
     pub fn clear(&self, color: Color) -> Result<(), String> {
         self.vcanvas_render(|c| {
-            let current_color = c.draw_color();
             c.set_draw_color(color);
             c.clear();
-            c.set_draw_color(current_color);
         })
     }
 
@@ -60,7 +67,7 @@ impl TextureRenderer {
         })
     }
 
-    fn vcanvas_render<F>(&self, f: F) -> Result<(), String> where for<'r> F: FnOnce(&'r mut Canvas<Window>,) {
+    pub fn vcanvas_render<F>(&self, f: F) -> Result<(), String> where for<'r> F: FnOnce(&'r mut Canvas<Window>,) {
         self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), f).map_err(|_| "sub canvas render error".to_owned())
     }
 

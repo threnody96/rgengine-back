@@ -18,7 +18,6 @@ pub struct VirtualCanvas {
     canvas: Rc<RefCell<Canvas<Window>>>,
     vcanvas: TextureRenderer,
     texture_creator: Rc<TextureCreator<WindowContext>>,
-    bounding_rect: Rect,
     option: VirtualCanvasOption
 }
 
@@ -32,7 +31,6 @@ impl VirtualCanvas {
             canvas: canvas.clone(),
             vcanvas: Self::create_new_vcanvas(canvas.clone(), texture_creator.clone(), option),
             texture_creator: texture_creator,
-            bounding_rect: Self::calc_bounding_rect(option.position, option.angle),
             option: option
         }
     }
