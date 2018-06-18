@@ -1,52 +1,69 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::cmp::{max, min};
 use ::sdl2::rect::{ Point, Rect };
-use super::VirtualCanvas;
-
-#[derive(Clone,Copy)]
-pub struct VirtualCanvasOption {
-    pub position: Rect,
-    pub angle: f64,
-    pub alpha: u8
-}
+use ::sdl2::render::{ BlendMode, Texture };
+use ::sdl2::pixels::{ Color, PixelFormatEnum };
+use super::{ VirtualCanvas, VirtualCanvasOption };
 
 impl VirtualCanvas {
 
     pub fn sub_canvas(&self, option: VirtualCanvasOption, f: &Fn(Rc<VirtualCanvas>)) {
-        let sub_canvas = Rc::new(self.create_sub_canvas(self.normalize_canvas_rect(option.position), option.alpha));
-        self.do_sub_canvas(sub_canvas.clone(), option, f);
+        let sub_canvas = Rc::new(self.create_sub_canvas(option));
+        self.do_sub_canvas(sub_canvas.clone(), f);
     }
 
-    fn normalize_canvas_rect(&self, rect: Rect) -> Rect {
-        let tq = self.vcanvas.borrow().query();
-        let vcanvas_rect = Rect::new(0, 0, tq.width, tq.height);
-        Self::overlap_rect(&rect, &vcanvas_rect).unwrap_or(Rect::new(0, 0, 1, 1))
+    fn create_new_sub_vcanvas(&self, br: Rect) -> Texture {
+        let mut vcanvas = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, br.width(), br.height()).unwrap();
+        vcanvas.set_blend_mode(BlendMode::Blend);
+        self.canvas.borrow_mut().with_texture_canvas(&mut vcanvas, |sc| {
+            sc.copy(&self.vcanvas.borrow(), br, Rect::new(0, 0, br.width(), br.height())).unwrap();
+        }).unwrap();
+        vcanvas
     }
 
-	fn overlap_rect(rect1: &Rect, rect2: &Rect) -> Option<Rect> {
-        let l_x = max(rect1.x(), rect2.x());
-        let r_x = min(rect1.x() + (rect1.width() as i32), rect2.x() + (rect2.width() as i32));
-        let u_y = max(rect1.y(), rect2.y());
-        let b_y = min(rect1.y() + (rect1.height() as i32), rect2.y() + (rect2.height() as i32));
-        if r_x - l_x < 0 || b_y - u_y < 0 { return None };
-        Some(Rect::new(l_x, u_y, (r_x - l_x) as u32, (b_y - u_y) as u32))
-	}
-
-    fn create_sub_canvas(&self, rect: Rect, alpha: u8) -> VirtualCanvas {
-        let mut vcanvas = Self::create_new_vcanvas(self.texture_creator.clone(), rect.width(), rect.height());
-        vcanvas.set_alpha_mod(alpha);
+    fn create_sub_canvas(&self, option: VirtualCanvasOption) -> VirtualCanvas {
+        let br = Self::calc_bounding_rect(option.position, option.angle);
         Self {
-            vcanvas: RefCell::new(vcanvas),
             canvas: self.canvas.clone(),
-            texture_creator: self.texture_creator.clone()
+            vcanvas: RefCell::new(self.create_new_sub_vcanvas(br)),
+            texture_creator: self.texture_creator.clone(),
+            bounding_rect: br,
+            option: option
         }
     }
 
-    fn do_sub_canvas(&self, sub_canvas: Rc<VirtualCanvas>, option: VirtualCanvasOption, f: &Fn(Rc<VirtualCanvas>)) {
-        let p = Point::new(option.position.x(), option.position.y());
+    fn do_sub_canvas(&self, sub_canvas: Rc<VirtualCanvas>, f: &Fn(Rc<VirtualCanvas>)) {
+        let p = Point::new(sub_canvas.option.position.x(), sub_canvas.option.position.y());
         f(sub_canvas.clone());
-        self.copy(&sub_canvas.vcanvas.borrow(), p, None, option.angle).unwrap();
+        self.copy(&sub_canvas.vcanvas.borrow(), p, None, sub_canvas.option.angle).unwrap();
+    }
+
+    fn copy_sub_canvas(&self, sub_canvas: Rc<VirtualCanvas>) {
+        let o = Rc::new(sub_canvas.create_transparent_object());
+
+    }
+
+    fn create_sub_canvas_mask(&self, object: Rc<Texture>) -> Texture {
+        let br = self.bounding_rect;
+        let mut mask = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, br.width(), br.height()).unwrap();
+        self.canvas.borrow_mut().with_texture_canvas(&mut mask, |sc| {
+            sc.set_blend_mode(BlendMode::None);
+            sc.set_draw_color(Self::default_color());
+            sc.clear();
+            sc.copy_ex(&object, None, self.option.position, self.option.angle, None, false, false).unwrap();
+        }).unwrap();
+        mask.set_blend_mode(BlendMode::Blend);
+        mask
+    }
+
+    fn create_transparent_object(&self) -> Texture {
+        let p = self.option.position;
+        let mut o = self.texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, p.width(), p.height()).unwrap();
+        self.canvas.borrow_mut().with_texture_canvas(&mut o, |sc| {
+            sc.set_blend_mode(BlendMode::None);
+            sc.set_draw_color(Color::RGBA(0, 0, 0, 0));
+        }).unwrap();
+        o
     }
 
 }

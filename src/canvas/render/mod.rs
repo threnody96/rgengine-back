@@ -4,7 +4,7 @@ use super::VirtualCanvas;
 
 impl VirtualCanvas {
 
-    pub fn render(&self) {
+    pub fn render_to_real_canvas(&self) {
         let tq = self.vcanvas.borrow().query();
         self.canvas.borrow_mut().copy(
             &self.vcanvas.borrow(),
@@ -32,8 +32,16 @@ impl VirtualCanvas {
 
     fn vcanvas_copy(&self, t: &Texture, src: Option<Rect>, dst: Rect, angle: f64) -> Result<(), String> {
         self.canvas.borrow_mut().with_texture_canvas(&mut self.vcanvas.borrow_mut(), |c| {
-            c.copy_ex(&t, src, Some(dst), angle, None, false, false).unwrap();
+            c.copy_ex(&t, src, Self::convert_to_center_base_dst(dst, angle), angle, None, false, false).unwrap();
         }).map_err(|_| "sub canvas render error".to_owned())
+    }
+
+    fn convert_to_center_base_dst(dst: Rect, angle: f64) -> Rect {
+        let c = Rect::from_center(Point::new(dst.x(), dst.y()), dst.width(), dst.height());
+        if angle == 0.0 { return c; }
+        let bc = Self::calc_bounding_rect(dst, angle).center();
+        let cc = c.center();
+        Rect::new(dst.x() + (cc.x() - bc.x()), dst.y() + (cc.y() - bc.y()), dst.width(), dst.height())
     }
 
     fn get_draw_rect(&self, t: &Texture, p: Point, clip: Option<Rect>) -> Rect {

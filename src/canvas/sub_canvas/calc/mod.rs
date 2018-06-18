@@ -12,10 +12,10 @@ impl VirtualCanvas {
         let rad = angle.to_radians();
         let center = rect.center();
         vec![
-            Self::calc_bounding_point(rect.left(), rect.top(), center, rad),
-            Self::calc_bounding_point(rect.left(), rect.bottom(), center, rad),
-            Self::calc_bounding_point(rect.right(), rect.top(), center, rad),
-            Self::calc_bounding_point(rect.right(), rect.bottom(), center, rad)
+            Self::calc_rotate_point(rect.left(), rect.top(), center, rad),
+            Self::calc_rotate_point(rect.left(), rect.bottom(), center, rad),
+            Self::calc_rotate_point(rect.right(), rect.top(), center, rad),
+            Self::calc_rotate_point(rect.right(), rect.bottom(), center, rad)
         ]
     }
 
@@ -31,7 +31,7 @@ impl VirtualCanvas {
         Rect::new(min_x, min_y, (max_x - min_x + 1) as u32, (max_y - min_y + 1) as u32)
     }
 
-    fn calc_bounding_point(base_x: i32, base_y: i32, center: Point, rad: f64) -> Point {
+    pub fn calc_rotate_point(base_x: i32, base_y: i32, center: Point, rad: f64) -> Point {
         let (sin, cos) = (rad.sin(), rad.cos());
         let (x, y) = ((base_x - center.x()) as f64, (base_y - center.y()) as f64);
         Point::new(

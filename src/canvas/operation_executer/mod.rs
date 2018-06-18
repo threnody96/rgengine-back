@@ -1,13 +1,14 @@
-use super::VirtualCanvas;
-use super::sub_canvas::VirtualCanvasOption;
+use super::{ VirtualCanvas, VirtualCanvasOption };
 use super::super::component::ComponentOption;
 use super::super::component::operation::Operation;
 use super::super::component::operation::OperationExecuter;
+use ::sdl2::render::BlendMode;
 
 impl VirtualCanvas {
 
     fn convert_coption_to_vcoption(&self, option: ComponentOption) -> VirtualCanvasOption {
         VirtualCanvasOption {
+            mode: BlendMode::None,
             position: option.position,
             angle: option.angle,
             alpha: option.alpha
