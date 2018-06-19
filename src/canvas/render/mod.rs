@@ -1,9 +1,9 @@
 use std::rc::Rc;
 use std::cell::{ Ref, RefMut, RefCell };
 use ::sdl2::rect::{ Point, Rect };
-use ::sdl2::render::{ Canvas, Texture, BlendMode };
+use ::sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use ::sdl2::pixels::{ Color, PixelFormatEnum };
-use ::sdl2::video::Window;
+use ::sdl2::video::{ Window, WindowContext };
 use super::VirtualCanvas;
 
 pub struct TextureRenderer {
@@ -15,6 +15,14 @@ impl TextureRenderer {
 
     pub fn new(canvas: Rc<RefCell<Canvas<Window>>>, texture: RefCell<Texture>) -> Self {
         Self { canvas: canvas, texture: texture }
+    }
+
+    pub fn clone(self, texture_creator: Rc<TextureCreator<WindowContext>>) -> Self {
+        let o = texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, self.width(), self.height()).unwrap();
+        let ot = TextureRenderer::new(self.canvas.clone(), RefCell::new(o));
+        ot.clear(VirtualCanvas::default_color());
+        ot.copy(&self.borrow(), self.center(), None, 0.0);
+        ot
     }
 
     pub fn borrow(&self) -> Ref<Texture> { self.texture.borrow() }
