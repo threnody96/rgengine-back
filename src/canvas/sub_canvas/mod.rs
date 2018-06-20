@@ -10,13 +10,13 @@ impl VirtualCanvas {
 
     pub fn sub_canvas(&self, option: VirtualCanvasOption, f: &Fn(Rc<VirtualCanvas>)) {
         let sub_canvas = Rc::new(self.create_sub_canvas(option));
-        self.do_sub_canvas(sub_canvas.clone(), f);
+        self.do_sub_canvas(sub_canvas, f);
     }
 
     fn create_new_sub_vcanvas(&self, br: Rect) -> TextureRenderer {
         let vcanvas = self.create_sub_canvas_base(br);
-        vcanvas.set_blend_mode(BlendMode::Blend);
-        vcanvas.copy(&self.vcanvas.borrow(), br.center(), None, 0.0);
+        vcanvas.set_blend_mode(BlendMode::Blend)
+            .copy(&self.vcanvas.borrow(), br.center(), None, 0.0);
         vcanvas
     }
 
@@ -47,45 +47,45 @@ impl VirtualCanvas {
 
     fn create_sub_canvas_around_texture(&self, br: Rect, sub_canvas: Rc<VirtualCanvas>, object: Rc<TextureRenderer>) -> TextureRenderer {
         let t = self.create_sub_canvas_base(br);
-        t.set_blend_mode(BlendMode::None);
-        t.copy(&object.borrow(), sub_canvas.vcanvas.center(), None, sub_canvas.option.angle);
-        t.set_blend_mode(BlendMode::Blend);
+        t.set_blend_mode(BlendMode::None)
+            .copy(&object.borrow(), sub_canvas.vcanvas.center(), None, sub_canvas.option.angle)
+            .set_blend_mode(BlendMode::Blend);
         t
     }
 
     fn normalize_sub_canvas_texture(&self, br: Rect, sub_canvas: Rc<VirtualCanvas>, object: Rc<TextureRenderer>) -> TextureRenderer {
         let p = sub_canvas.vcanvas.center();
-        let t = self.create_renderer(p.x() as u32, p.y() as u32);
-        t.set_blend_mode(BlendMode::None);
-        t.copy(&sub_canvas.vcanvas.borrow(), p, None, 0.0);
-        t.set_blend_mode(BlendMode::Blend);
         let mask = self.create_sub_canvas_mask(sub_canvas.clone(), object.clone());
-        t.copy(&mask.borrow(), br.center(), None, 0.0);
+        let t = self.create_renderer(p.x() as u32, p.y() as u32);
+        t.set_blend_mode(BlendMode::None)
+            .copy(&sub_canvas.vcanvas.borrow(), p, None, 0.0)
+            .set_blend_mode(BlendMode::Blend)
+            .copy(&mask.borrow(), br.center(), None, 0.0);
         t
     }
 
     fn create_sub_canvas_base(&self, br: Rect) -> TextureRenderer {
         let t = self.create_renderer(br.width(), br.height());
-        t.set_blend_mode(BlendMode::Blend);
-        t.clear(Self::default_color());
-        t.copy(&self.vcanvas.borrow(), br.center(), None, 0.0);
+        t.set_blend_mode(BlendMode::Blend)
+            .clear(Self::default_color())
+            .copy(&self.vcanvas.borrow(), br.center(), None, 0.0);
         t
     }
 
     fn create_sub_canvas_mask(&self, sub_canvas: Rc<VirtualCanvas>, object: Rc<TextureRenderer>) -> TextureRenderer {
         let mask = self.create_renderer(sub_canvas.vcanvas.width(), sub_canvas.vcanvas.height());
-        mask.set_blend_mode(BlendMode::None);
-        mask.clear(Self::default_color());
-        mask.copy(&object.borrow(), sub_canvas.vcanvas.center(), None, sub_canvas.option.angle);
-        mask.set_blend_mode(BlendMode::Blend);
+        mask.set_blend_mode(BlendMode::None)
+            .clear(Self::default_color())
+            .copy(&object.borrow(), sub_canvas.vcanvas.center(), None, sub_canvas.option.angle)
+            .set_blend_mode(BlendMode::Blend);
         mask
     }
 
     fn create_transparent_object(&self) -> TextureRenderer {
         let p = self.option.position;
         let object = self.create_renderer(p.width(), p.height());
-        object.set_blend_mode(BlendMode::None);
-        object.clear(Color::RGBA(0, 0, 0, 0)).unwrap();
+        object.set_blend_mode(BlendMode::None)
+            .clear(Color::RGBA(0, 0, 0, 0));
         object
     }
 

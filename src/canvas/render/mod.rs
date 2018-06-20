@@ -17,12 +17,16 @@ impl TextureRenderer {
         Self { canvas: canvas, texture: texture }
     }
 
-    pub fn clone(self, texture_creator: Rc<TextureCreator<WindowContext>>) -> Self {
-        let o = texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, self.width(), self.height()).unwrap();
-        let ot = TextureRenderer::new(self.canvas.clone(), RefCell::new(o));
-        ot.clear(VirtualCanvas::default_color());
-        ot.copy(&self.borrow(), self.center(), None, 0.0);
-        ot
+    pub fn create(canvas: Rc<RefCell<Canvas<Window>>>, texture_creator: Rc<TextureCreator<WindowContext>>, width: u32, height: u32) -> Self {
+        let o = texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, width, height).unwrap();
+        TextureRenderer::new(canvas.clone(), RefCell::new(o))
+    }
+
+    pub fn clone(&self, texture_creator: Rc<TextureCreator<WindowContext>>) -> Self {
+        let o = Self::create(self.canvas.clone(), texture_creator, self.width(), self.height());
+        o.clear(VirtualCanvas::default_color())
+            .copy(&self.borrow(), self.center(), None, 0.0);
+        o
     }
 
     pub fn borrow(&self) -> Ref<Texture> { self.texture.borrow() }
@@ -35,30 +39,31 @@ impl TextureRenderer {
 
     pub fn center(&self) -> Point { Point::new(self.width() as i32 / 2, self.height() as i32 / 2) }
 
-    pub fn fill_rect(&self, color: Color, rect: Rect) {
+    pub fn fill_rect(&self, color: Color, rect: Rect) -> &Self {
         self.vcanvas_render(|c| {
             c.set_draw_color(color);
             c.fill_rect(rect);
-        });
+        })
     }
 
-    pub fn set_blend_mode(&self, mode: BlendMode) {
+    pub fn set_blend_mode(&self, mode: BlendMode) -> &Self {
         self.borrow_mut().set_blend_mode(mode);
+        self
     }
 
-    pub fn clear(&self, color: Color) -> Result<(), String> {
+    pub fn clear(&self, color: Color) -> &Self {
         self.vcanvas_render(|c| {
             c.set_draw_color(color);
             c.clear();
         })
     }
 
-    pub fn copy(&self, t: &Texture, p: Point, clip: Option<Rect>, angle: f64) -> Result<(), String> {
+    pub fn copy(&self, t: &Texture, p: Point, clip: Option<Rect>, angle: f64) -> &Self {
         let draw_rect = self.get_draw_rect(&t, p, clip);
         self.vcanvas_copy(&t, clip, draw_rect, angle)
     }
 
-    pub fn zoom(&self, t: &Texture, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) -> Result<(), String> {
+    pub fn zoom(&self, t: &Texture, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) -> &Self {
         let tmp_draw_rect = self.get_draw_rect(&t, p, clip);
         let draw_rect = Rect::new(
             tmp_draw_rect.x(),
@@ -69,29 +74,29 @@ impl TextureRenderer {
         self.vcanvas_copy(&t, clip, draw_rect, angle)
     }
 
-    fn vcanvas_copy(&self, t: &Texture, src: Option<Rect>, dst: Rect, angle: f64) -> Result<(), String> {
+    fn vcanvas_copy(&self, t: &Texture, src: Option<Rect>, dst: Rect, angle: f64) -> &Self {
         self.vcanvas_render(|c| {
             c.copy_ex(&t, src, Self::convert_to_center_base_dst(dst, angle), angle, None, false, false).unwrap();
         })
     }
 
-    pub fn vcanvas_render<F>(&self, f: F) -> Result<(), String> where for<'r> F: FnOnce(&'r mut Canvas<Window>,) {
-        self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), f).map_err(|_| "sub canvas render error".to_owned())
+    pub fn vcanvas_render<F>(&self, f: F) -> &Self where for<'r> F: FnOnce(&'r mut Canvas<Window>,) {
+        self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), f).map_err(|_| "sub canvas render error".to_owned()).unwrap();
+        self
     }
 
     fn convert_to_center_base_dst(dst: Rect, angle: f64) -> Rect {
-        let c = Rect::from_center(Point::new(dst.x(), dst.y()), dst.width(), dst.height());
-        if angle == 0.0 { return c; }
+        if angle == 0.0 { return dst; }
         let bc = VirtualCanvas::calc_bounding_rect(dst, angle).center();
-        let cc = c.center();
-        Rect::new(dst.x() + (cc.x() - bc.x()), dst.y() + (cc.y() - bc.y()), dst.width(), dst.height())
+        let dc = dst.center();
+        Rect::new(dst.x() + (dc.x() - bc.x()), dst.y() + (dc.y() - bc.y()), dst.width(), dst.height())
     }
 
     fn get_draw_rect(&self, t: &Texture, p: Point, clip: Option<Rect>) -> Rect {
         let tq = t.query();
         match clip {
-            None => { Rect::new(p.x(), p.y(), tq.width, tq.height) },
-            Some(cl) => { Rect::new(p.x(), p.y(), cl.width(), cl.height()) }
+            None => { Rect::from_center(p, tq.width, tq.height) },
+            Some(cl) => { Rect::from_center(p, cl.width(), cl.height()) }
         }
     }
 

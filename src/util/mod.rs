@@ -18,3 +18,5 @@ pub fn load_file(path: &Path) -> Result<Vec<u8>, String> {
     }
     Ok(result)
 }
+
+pub mod texture;
