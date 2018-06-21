@@ -1,5 +1,6 @@
 use std::path::Path;
 use std::rc::Rc;
+use std::cell::RefCell;
 use super::super::storage::Storage;
 use super::ResourceLoader;
 use super::ResourceManager;
@@ -9,7 +10,7 @@ use ::sdl2::image::ImageRWops;
 use ::sdl2::video::WindowContext;
 
 impl ResourceLoader for TextureCreator<WindowContext> {
-    type Item = Texture;
+    type Item = RefCell<Texture>;
     fn resource_name(&self) -> String {
         "texture".to_owned()
     }
@@ -19,7 +20,7 @@ impl ResourceLoader for TextureCreator<WindowContext> {
         let rwops = RWops::from_bytes(resource.as_slice()).unwrap();
         let ext = Path::new(path).extension().unwrap().to_str().unwrap();
         let surface = try!(rwops.load_typed(ext));
-        self.create_texture_from_surface(surface).map_err(|_| "err".to_owned())
+        Ok(RefCell::new(try!(self.create_texture_from_surface(surface).map_err(|_| "err".to_owned()))))
     }
 
 }

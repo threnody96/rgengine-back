@@ -4,22 +4,25 @@ use std::rc::Rc;
 use self::storage::Storage;
 use self::manager::texture::TextureManager;
 use self::manager::plaindata::{ PlainDataLoader, PlainDataManager };
-use ::sdl2::video::WindowContext;
-use ::sdl2::render::{ Texture, TextureCreator };
+use ::util::texture::RGTexture;
+use ::sdl2::video::{ Window, WindowContext };
+use ::sdl2::render::{ Canvas, Texture, TextureCreator };
 
 pub struct Resource {
     storages: HashMap<String, Rc<Box<Storage>>>,
     plaindata: RefCell<PlainDataManager>,
-    texture: RefCell<TextureManager>
+    texture: RefCell<TextureManager>,
+    canvas: Rc<RefCell<Canvas<Window>>>
 }
 
 impl Resource {
 
-    pub fn new(storages:Vec<Box<Storage>>, pl: Rc<PlainDataLoader>, tc: Rc<TextureCreator<WindowContext>>) -> Self {
+    pub fn new(storages:Vec<Box<Storage>>, pl: Rc<PlainDataLoader>, tc: Rc<TextureCreator<WindowContext>>, canvas: Rc<RefCell<Canvas<Window>>>) -> Self {
         Self {
             storages: Self::convert_to_storage_map(storages),
             plaindata: RefCell::new(PlainDataManager::new(pl)),
-            texture: RefCell::new(TextureManager::new(tc))
+            texture: RefCell::new(TextureManager::new(tc)),
+            canvas: canvas
         }
     }
 
@@ -27,8 +30,9 @@ impl Resource {
         self.plaindata.borrow_mut().load(try!(self.get_storage(storage_name)), path)
     }
 
-    pub fn load_texture(&self, storage_name: &str, path: &str) -> Result<Rc<Texture>, String> {
-        self.texture.borrow_mut().load(try!(self.get_storage(storage_name)), path)
+    pub fn load_texture(&self, storage_name: &str, path: &str) -> Result<Rc<RGTexture>, String> {
+        let t = try!(self.texture.borrow_mut().load(try!(self.get_storage(storage_name)), path));
+        Ok(Rc::new(RGTexture::new(self.canvas.clone(), self.texture.borrow().loader().clone(), t.clone())))
     }
 
     pub fn list(&self, storage_name: &str, dir: Option<&str>) -> Result<Vec<String>, String> {

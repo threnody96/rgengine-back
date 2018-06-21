@@ -19,6 +19,10 @@ impl<R> ResourceManager<R> where R: ResourceLoader {
         Self { cache: HashMap::new(), loader: loader }
     }
 
+    pub fn loader(&self) -> Rc<R> {
+        self.loader.clone()
+    }
+
     pub fn load(&mut self, storage: Rc<Box<Storage>>, path: &str) -> Result<Rc<R::Item>, String> {
         let cache_key = Self::generate_cache_key(&storage.name(), path);
         let data = self.cache.get(&cache_key).cloned();

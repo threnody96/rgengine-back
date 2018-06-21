@@ -10,14 +10,14 @@ use self::log::OperationLog;
 pub struct RGTexture {
     canvas: Rc<RefCell<Canvas<Window>>>,
     texture_creator: Rc<TextureCreator<WindowContext>>,
-    texture: RefCell<Texture>,
+    texture: Rc<RefCell<Texture>>,
     operations: RefCell<Vec<Operation>>,
     log: RefCell<OperationLog>
 }
 
 impl RGTexture {
 
-    pub fn new(canvas: Rc<RefCell<Canvas<Window>>>, texture_creator: Rc<TextureCreator<WindowContext>>, texture: RefCell<Texture>) -> Self {
+    pub fn new(canvas: Rc<RefCell<Canvas<Window>>>, texture_creator: Rc<TextureCreator<WindowContext>>, texture: Rc<RefCell<Texture>>) -> Self {
         let t = Self {
             canvas: canvas,
             texture_creator: texture_creator,
@@ -31,7 +31,7 @@ impl RGTexture {
 
     pub fn create(canvas: Rc<RefCell<Canvas<Window>>>, texture_creator: Rc<TextureCreator<WindowContext>>, width: u32, height: u32) -> Self {
         let o = texture_creator.create_texture_target(PixelFormatEnum::ARGB8888, width, height).unwrap();
-        let t = Self::new(canvas.clone(), texture_creator.clone(), RefCell::new(o));
+        let t = Self::new(canvas.clone(), texture_creator.clone(), Rc::new(RefCell::new(o)));
         t.init();
         t
     }
