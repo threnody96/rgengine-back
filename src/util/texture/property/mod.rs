@@ -6,6 +6,15 @@ use ::sdl2::video::Window;
 
 impl RGTexture {
 
+    pub fn set_texture_alpha_mode(&self, alpha: u8) -> &Self {
+        self.emit().borrow_mut().set_alpha_mod(alpha);
+        self
+    }
+
+    pub fn texture_alpha_mode(&self) -> u8 {
+        self.borrow().alpha_mod()
+    }
+
     pub fn set_draw_color(&self, color: Color) -> &Self {
         self.log.borrow_mut().set_draw_color(color);
         self.regist(Operation::SetDrawColor { color: color });
