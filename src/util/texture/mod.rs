@@ -66,7 +66,6 @@ impl RGTexture {
              Operation::Clear { color } => { self.do_clear(c, color); },
              Operation::Copy { t, p, clip, angle } => { self.do_copy(c, t, p, clip, angle); },
              Operation::Zoom { t, p, clip, zoom_x, zoom_y, angle } => { self.do_zoom(c, t, p, clip, zoom_x, zoom_y, angle); },
-             Operation::CopyPlain { t, src, dst } => { self.do_copy_plain(c, t, src, dst); }
          };
     }
 
@@ -88,7 +87,8 @@ impl Clone for RGTexture {
     fn clone(&self) -> Self {
         self.emit();
         let n = Self::create(self.canvas.clone(), self.texture_creator.clone(), self.width(), self.height());
-        n.set_texture_alpha_mode(self.texture_alpha_mode())
+        n.copy_plain(&self, None, Some(Rect::new(0, 0, self.width(), self.height())))
+            .set_texture_alpha_mode(self.texture_alpha_mode())
             .set_draw_color(self.draw_color())
             .set_blend_mode(self.blend_mode())
             .emit();

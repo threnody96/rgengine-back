@@ -58,13 +58,11 @@ impl RGTexture {
         c.copy_ex(&t.borrow(), clip, draw_rect, angle, None, false, false).unwrap();
     }
 
-    pub fn copy_plain(&self, t: Rc<RGTexture>, src: Option<Rect>, dst: Option<Rect>) -> &Self {
-        self.regist(Operation::CopyPlain { t: t, src: src, dst: dst });
+    pub fn copy_plain(&self, t: &RGTexture, src: Option<Rect>, dst: Option<Rect>) -> &Self {
+        self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), |c| {
+            c.copy(&t.borrow(), src, dst).unwrap();
+        });
         self
-    }
-
-    pub fn do_copy_plain(&self, c: &mut Canvas<Window>, t: Rc<RGTexture>, src: Option<Rect>, dst: Option<Rect>) {
-        c.copy(&t.borrow(), src, dst).unwrap();
     }
 
     fn get_draw_rect(&self, t: Rc<RGTexture>, p: Point, clip: Option<Rect>) -> Rect {

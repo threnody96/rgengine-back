@@ -12,7 +12,6 @@ pub enum Operation {
     FillRect { color: Color, rect: Rect },
     Clear { color: Color },
     Copy { t: Rc<RGTexture>, p: Point, clip: Option<Rect>, angle: f64 },
-    CopyPlain { t: Rc<RGTexture>, src: Option<Rect>, dst: Option<Rect> },
     Zoom { t: Rc<RGTexture>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64 }
 }
 
