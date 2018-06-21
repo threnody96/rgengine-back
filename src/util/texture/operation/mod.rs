@@ -9,8 +9,8 @@ use ::sdl2::render::BlendMode;
 pub enum Operation {
     SetDrawColor { color: Color },
     SetBlendMode { mode: BlendMode },
-    FillRect { color: Color, rect: Rect },
-    Clear { color: Color },
+    FillRect { color: Option<Color>, rect: Rect },
+    Clear { color: Option<Color> },
     Copy { t: Rc<RGTexture>, p: Point, clip: Option<Rect>, angle: f64 },
     Zoom { t: Rc<RGTexture>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64 }
 }

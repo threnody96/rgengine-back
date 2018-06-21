@@ -6,12 +6,25 @@ use ::sdl2::video::Window;
 
 impl RGTexture {
 
-    pub fn set_texture_alpha_mode(&self, alpha: u8) -> &Self {
+    pub fn set_default_property(&self) -> &Self {
+        self.set_texture_alpha(255)
+            .set_draw_color(Self::default_color())
+            .set_blend_mode(BlendMode::None)
+            .emit()
+    }
+    
+    pub fn clone_property(&self, t: &RGTexture) -> &Self {
+        self.set_texture_alpha(t.texture_alpha())
+            .set_draw_color(t.draw_color())
+            .set_blend_mode(t.blend_mode())
+    }
+
+    pub fn set_texture_alpha(&self, alpha: u8) -> &Self {
         self.emit().borrow_mut().set_alpha_mod(alpha);
         self
     }
 
-    pub fn texture_alpha_mode(&self) -> u8 {
+    pub fn texture_alpha(&self) -> u8 {
         self.borrow().alpha_mod()
     }
 

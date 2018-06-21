@@ -4,7 +4,6 @@ use ::sdl2::render::BlendMode;
 pub struct OperationLog {
     draw_color: Option<Color>,
     blend_mode: Option<BlendMode>,
-    alpha_mode: Option<u8>
 }
 
 impl OperationLog {
@@ -12,8 +11,7 @@ impl OperationLog {
     pub fn new() -> Self {
         Self {
             draw_color: None,
-            blend_mode: None,
-            alpha_mode: None
+            blend_mode: None
         }
     }
 
@@ -24,10 +22,5 @@ impl OperationLog {
     pub fn set_blend_mode(&mut self, mode: BlendMode) { self.blend_mode = Some(mode); }
 
     pub fn blend_mode(&self) -> Option<BlendMode> { self.blend_mode }
-
-    pub fn set_alpha_mode(&mut self, alpha: u8) { self.alpha_mode = Some(alpha); }
-
-    pub fn alpha_mode(&self) -> Option<u8> { self.alpha_mode }
-
 
 }

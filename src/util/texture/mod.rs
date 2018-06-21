@@ -48,14 +48,18 @@ impl RGTexture {
         self.operations.borrow_mut().push(operation);
     }
 
-    pub fn emit(&self) -> &Self {
+    pub fn emit_with_canvas(&self, canvas: &mut Canvas<Window>) -> &Self {
         if self.operations.borrow().len() == 0 { return self; }
-        self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), |c| {
+        canvas.with_texture_canvas(&mut self.borrow_mut(), |c| {
             while self.operations.borrow().len() > 0 {
                 self.do_operation(c, self.operations.borrow_mut().remove(0));
             }
         }).unwrap();
         self
+    }
+
+    pub fn emit(&self) -> &Self {
+        self.emit_with_canvas(&mut self.canvas.borrow_mut())
     }
 
     fn do_operation(&self, c: &mut Canvas<Window>, operation: Operation) {
@@ -74,10 +78,14 @@ impl RGTexture {
     }
 
     pub fn init(&self) -> &Self {
-        self.clear(Self::default_color())
-            .set_blend_mode(BlendMode::None)
+        self.set_default_property()
+            .clear(None)
             .emit();
         self
+    }
+
+    pub fn texture_clone(&self) -> Self {
+        self.clone()
     }
 
 }
@@ -85,12 +93,9 @@ impl RGTexture {
 impl Clone for RGTexture {
 
     fn clone(&self) -> Self {
-        self.emit();
         let n = Self::create(self.canvas.clone(), self.texture_creator.clone(), self.width(), self.height());
-        n.copy_plain(&self, None, Some(Rect::new(0, 0, self.width(), self.height())))
-            .set_texture_alpha_mode(self.texture_alpha_mode())
-            .set_draw_color(self.draw_color())
-            .set_blend_mode(self.blend_mode())
+        n.clean_copy(&self, None, Some(Rect::new(0, 0, self.width(), self.height())))
+            .clone_property(self)
             .emit();
         n
     }

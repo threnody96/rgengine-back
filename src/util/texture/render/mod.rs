@@ -2,34 +2,44 @@ use std::rc::Rc;
 use super::RGTexture;
 use super::operation::Operation;
 use ::sdl2::pixels::Color;
-use ::sdl2::render::Canvas;
+use ::sdl2::render::{ Canvas, BlendMode };
 use ::sdl2::video::Window;
 use ::sdl2::rect::{ Point, Rect };
 
 impl RGTexture {
 
-    pub fn fill_rect(&self, color: Color, rect: Rect) -> &Self {
+    pub fn fill_rect(&self, color: Option<Color>, rect: Rect) -> &Self {
         self.regist(Operation::FillRect { color: color, rect: rect });
         self
     }
 
-    pub fn do_fill_rect(&self, c: &mut Canvas<Window>, color: Color, rect: Rect) {
-        let current_color = c.draw_color();
-        c.set_draw_color(color);
-        c.fill_rect(rect);
-        c.set_draw_color(current_color);
+    pub fn do_fill_rect(&self, c: &mut Canvas<Window>, color: Option<Color>, rect: Rect) {
+        match color {
+            None => { c.fill_rect(rect); },
+            Some(co) => {
+                let current_color = c.draw_color();
+                c.set_draw_color(co);
+                c.fill_rect(rect);
+                c.set_draw_color(current_color);
+            }
+        };
     }
 
-    pub fn clear(&self, color: Color) -> &Self {
+    pub fn clear(&self, color: Option<Color>) -> &Self {
         self.regist(Operation::Clear { color: color });
         self
     }
 
-    pub fn do_clear(&self, c: &mut Canvas<Window>, color: Color) {
-        let current_color = c.draw_color();
-        c.set_draw_color(color);
-        c.clear();
-        c.set_draw_color(current_color);
+    pub fn do_clear(&self, c: &mut Canvas<Window>, color: Option<Color>) {
+        match color {
+            None => { c.clear(); },
+            Some(co) => {
+                let current_color = c.draw_color();
+                c.set_draw_color(co);
+                c.clear();
+                c.set_draw_color(current_color);
+            }
+        };
     }
 
     pub fn copy(&self, t: Rc<RGTexture>, p: Point, clip: Option<Rect>, angle: f64) -> &Self {
@@ -38,6 +48,7 @@ impl RGTexture {
     }
 
     pub fn do_copy(&self, c: &mut Canvas<Window>, t: Rc<RGTexture>, p: Point, clip: Option<Rect>, angle: f64) {
+        t.emit_with_canvas(c);
         let draw_rect = self.get_draw_rect(t.clone(), p, clip);
         c.copy_ex(&t.borrow(), clip, draw_rect, angle, None, false, false).unwrap();
     }
@@ -48,6 +59,7 @@ impl RGTexture {
     }
 
     pub fn do_zoom(&self, c: &mut Canvas<Window>, t: Rc<RGTexture>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) {
+        t.emit_with_canvas(c);
         let tmp_draw_rect = self.get_draw_rect(t.clone(), p, clip);
         let draw_rect = Rect::new(
             tmp_draw_rect.x(),
@@ -58,10 +70,21 @@ impl RGTexture {
         c.copy_ex(&t.borrow(), clip, draw_rect, angle, None, false, false).unwrap();
     }
 
+    pub fn clean_copy(&self, t: &RGTexture, src: Option<Rect>, dst: Option<Rect>) -> &Self {
+        t.emit();
+        let mode = t.blend_mode();
+        let alpha = t.texture_alpha();
+        t.set_blend_mode(BlendMode::None).set_texture_alpha(255).emit();
+        self.copy_plain(t, src, dst);
+        t.set_blend_mode(mode).set_texture_alpha(alpha).emit();
+        self
+    }
+
     pub fn copy_plain(&self, t: &RGTexture, src: Option<Rect>, dst: Option<Rect>) -> &Self {
+        t.emit();
         self.canvas.borrow_mut().with_texture_canvas(&mut self.borrow_mut(), |c| {
             c.copy(&t.borrow(), src, dst).unwrap();
-        });
+        }).unwrap();
         self
     }
 
