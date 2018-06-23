@@ -72,11 +72,12 @@ impl RGTexture {
 
     pub fn clean_copy(&self, t: &RGTexture, src: Option<Rect>, dst: Option<Rect>) -> &Self {
         t.emit();
-        let mode = t.blend_mode();
-        let alpha = t.texture_alpha();
+        let (t_mode, t_alpha) = (t.blend_mode(), t.texture_alpha());
+        let (s_mode, s_alpha) = (self.blend_mode(), self.texture_alpha());
         t.set_blend_mode(BlendMode::None).set_texture_alpha(255).emit();
         self.copy_plain(t, src, dst);
-        t.set_blend_mode(mode).set_texture_alpha(alpha).emit();
+        t.set_blend_mode(t_mode).set_texture_alpha(t_alpha).emit();
+        self.set_blend_mode(s_mode).set_texture_alpha(s_alpha).emit();
         self
     }
 

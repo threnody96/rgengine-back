@@ -44,6 +44,8 @@ impl RGTexture {
 
     pub fn height(&self) -> u32 { self.borrow().query().height }
 
+    pub fn center(&self) -> Point { Point::new((self.width() / 2) as i32, (self.height() / 2) as i32) }
+
     fn regist(&self, operation: Operation) {
         self.operations.borrow_mut().push(operation);
     }
