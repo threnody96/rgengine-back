@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use ::util::texture::RGTexture;
 use ::sdl2::rect::{ Point, Rect };
 use ::sdl2::render::Texture;
 use self::operation::Operation;
@@ -60,11 +61,11 @@ impl<P> Component<P> {
         Some(Operation::Group { option: self.option(), operations: operations })
     }
 
-    pub fn copy(&self, t: Rc<Texture>, p: Point, clip: Option<Rect>, angle: f64) {
+    pub fn copy(&self, t: Rc<RGTexture>, p: Point, clip: Option<Rect>, angle: f64) {
         self.regist(Operation::Copy { t: t, p: p, clip: clip, angle: angle });
     }
 
-    pub fn zoom(&self, t: Rc<Texture>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) {
+    pub fn zoom(&self, t: Rc<RGTexture>, p: Point, clip: Option<Rect>, zoom_x: Option<f32>, zoom_y: Option<f32>, angle: f64) {
         self.regist(Operation::Zoom {
             t: t,
             p: p,

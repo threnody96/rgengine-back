@@ -27,10 +27,10 @@ impl OperationExecuter for VirtualCanvas {
                 });
             },
             Operation::Copy { t, p, clip, angle } => {
-                self.vcanvas.copy(t, p.clone(), clip.clone(), angle.clone());
+                self.vcanvas.copy(t.clone(), p.clone(), clip.clone(), angle.clone());
             },
             Operation::Zoom { t, p, clip, zoom_x, zoom_y, angle } => {
-                self.vcanvas.zoom(t, p.clone(), clip.clone(), zoom_x.clone(), zoom_y.clone(), angle.clone());
+                self.vcanvas.zoom(t.clone(), p.clone(), clip.clone(), zoom_x.clone(), zoom_y.clone(), angle.clone());
             }
         }
     }

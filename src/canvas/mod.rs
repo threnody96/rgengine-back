@@ -4,7 +4,6 @@ use ::sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use ::sdl2::pixels::{ Color, PixelFormatEnum };
 use ::sdl2::rect::Rect;
 use ::sdl2::video::{ Window, WindowContext };
-use self::render::TextureRenderer;
 use ::util::texture::RGTexture;
 
 #[derive(Clone,Copy)]
@@ -61,5 +60,4 @@ impl VirtualCanvas {
 }
 
 pub mod sub_canvas;
-pub mod render;
 pub mod operation_executer;
