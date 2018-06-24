@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use ::sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
-use ::sdl2::pixels::{ Color, PixelFormatEnum };
+use ::sdl2::render::{ Canvas, TextureCreator, BlendMode };
 use ::sdl2::rect::Rect;
 use ::sdl2::video::{ Window, WindowContext };
 use ::util::texture::RGTexture;

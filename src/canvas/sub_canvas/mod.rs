@@ -1,8 +1,7 @@
 use std::rc::Rc;
-use std::cell::RefCell;
-use ::sdl2::rect::{ Point, Rect };
-use ::sdl2::render::{ BlendMode, Texture };
-use ::sdl2::pixels::{ Color, PixelFormatEnum };
+use ::sdl2::rect::Rect;
+use ::sdl2::render::BlendMode;
+use ::sdl2::pixels::Color;
 use super::{ VirtualCanvas, VirtualCanvasOption };
 use ::util::texture::RGTexture;
 

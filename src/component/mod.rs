@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use ::util::texture::RGTexture;
 use ::sdl2::rect::{ Point, Rect };
-use ::sdl2::render::Texture;
 use self::operation::Operation;
 
 #[derive(Clone,Copy)]

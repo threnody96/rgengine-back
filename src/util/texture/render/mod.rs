@@ -15,11 +15,11 @@ impl RGTexture {
 
     pub fn do_fill_rect(&self, c: &mut Canvas<Window>, color: Option<Color>, rect: Rect) {
         match color {
-            None => { c.fill_rect(rect); },
+            None => { c.fill_rect(rect).unwrap(); },
             Some(co) => {
                 let current_color = c.draw_color();
                 c.set_draw_color(co);
-                c.fill_rect(rect);
+                c.fill_rect(rect).unwrap();
                 c.set_draw_color(current_color);
             }
         };

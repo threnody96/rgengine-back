@@ -1,7 +1,6 @@
 use std::rc::Rc;
 use super::ComponentOption;
 use ::util::texture::RGTexture;
-use ::sdl2::render::Texture;
 use ::sdl2::rect::{ Point, Rect };
 
 pub trait OperationExecuter {

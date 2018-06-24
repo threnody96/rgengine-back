@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::{ Ref, RefMut, RefCell };
 use ::sdl2::rect::{ Point, Rect };
-use ::sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
+use ::sdl2::render::{ Canvas, Texture, TextureCreator };
 use ::sdl2::pixels::{ Color, PixelFormatEnum };
 use ::sdl2::video::{ Window, WindowContext };
 use self::operation::Operation;

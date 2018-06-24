@@ -6,7 +6,7 @@ use self::manager::texture::TextureManager;
 use self::manager::plaindata::{ PlainDataLoader, PlainDataManager };
 use ::util::texture::RGTexture;
 use ::sdl2::video::{ Window, WindowContext };
-use ::sdl2::render::{ Canvas, Texture, TextureCreator };
+use ::sdl2::render::{ Canvas, TextureCreator };
 
 pub struct Resource {
     storages: HashMap<String, Rc<Box<Storage>>>,
