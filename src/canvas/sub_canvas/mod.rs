@@ -62,7 +62,7 @@ impl VirtualCanvas {
     fn normalize_sub_canvas_texture(&self, sub_canvas: Rc<VirtualCanvas>, object: Rc<RGTexture>) -> RGTexture {
         let br = sub_canvas.bounding_rect;
         let t = RGTexture::create(self.canvas.clone(), self.texture_creator.clone(), br.width(), br.height());
-        t.clean_copy(&*self.vcanvas, Some(sub_canvas.bounding_rect), Some(Rect::new(0, 0, br.width(), br.height())));
+        t.clean_copy(&*self.vcanvas, Some(br), Some(Rect::new(0, 0, br.width(), br.height())));
         t.copy(object.clone(), br.center(), None, sub_canvas.option.angle).set_blend_mode(BlendMode::Blend).emit();
         t
     }
