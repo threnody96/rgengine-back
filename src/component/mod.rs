@@ -2,10 +2,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use ::util::texture::RGTexture;
 use ::sdl2::rect::{ Point, Rect };
+use ::sdl2::render::BlendMode;
 use self::operation::Operation;
 
 #[derive(Clone,Copy)]
 pub struct ComponentOption {
+    pub mode: BlendMode,
     pub position: Rect,
     pub angle: f64,
     pub alpha: u8

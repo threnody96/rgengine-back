@@ -2,13 +2,12 @@ use super::{ VirtualCanvas, VirtualCanvasOption };
 use super::super::component::ComponentOption;
 use super::super::component::operation::Operation;
 use super::super::component::operation::OperationExecuter;
-use ::sdl2::render::BlendMode;
 
 impl VirtualCanvas {
 
     fn convert_coption_to_vcoption(&self, option: ComponentOption) -> VirtualCanvasOption {
         VirtualCanvasOption {
-            mode: BlendMode::None,
+            mode: option.mode,
             position: option.position,
             angle: option.angle,
             alpha: option.alpha
@@ -24,6 +23,7 @@ impl OperationExecuter for VirtualCanvas {
             Operation::Group { option, operations } => {
                 self.sub_canvas(self.convert_coption_to_vcoption(option.clone()), &|c| {
                     for o in operations { c.operation_execute(o); }
+                    c.vcanvas.set_blend_mode(option.mode).set_texture_alpha(option.alpha).emit();
                 });
             },
             Operation::Copy { t, p, clip, angle } => {
