@@ -20,3 +20,4 @@ pub fn load_file(path: &Path) -> Result<Vec<u8>, String> {
 }
 
 pub mod texture;
+pub mod event;
