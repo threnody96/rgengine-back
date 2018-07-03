@@ -1,3 +1,4 @@
+#[derive(PartialEq, Eq, Hash)]
 pub enum KeyType {
     Backspace,
     Tab,
