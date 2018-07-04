@@ -20,7 +20,12 @@ impl InputData {
 
     pub fn update(&self) {
         let mut keymap = KeyMap::new();
+        self.update_keys(&mut self.event.borrow_mut(), &mut keymap);
         self.keyMap.replace(keymap);
+    }
+
+    fn update_keys(&self, event: &mut EventPump, keymap: &mut KeyMap) {
+        
     }
 
 }
