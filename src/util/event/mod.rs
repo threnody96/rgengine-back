@@ -15,17 +15,22 @@ pub struct InputData {
 impl InputData {
 
     pub fn new(event: Rc<RefCell<EventPump>>) -> Self {
-        Self { event: event, keyMap: RefCell::new(KeyMap::new()) }
+        Self { event: event, keyMap: RefCell::new(Self::initKeyMap()) }
+    }
+
+    fn initKeyMap() -> KeyMap {
+        KeyMap::new()
     }
 
     pub fn update(&self) {
         let mut keymap = KeyMap::new();
-        self.update_keys(&mut self.event.borrow_mut(), &mut keymap);
+        self.update_keys(&mut keymap);
         self.keyMap.replace(keymap);
     }
 
-    fn update_keys(&self, event: &mut EventPump, keymap: &mut KeyMap) {
-        
+    fn update_keys(&self, keymap: &mut KeyMap) {
+        let e = self.event.borrow_mut();
+        let keyMap = self.keyMap.borrow();
     }
 
 }
