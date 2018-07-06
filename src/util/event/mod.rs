@@ -30,6 +30,7 @@ impl InputData {
 
     fn update_keys(&self, keymap: &mut KeyMap) {
         let e = self.event.borrow_mut();
+
         let keyMap = self.keyMap.borrow();
     }
 
