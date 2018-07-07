@@ -1,3 +1,5 @@
 pub enum KeyValue {
-    Keyboard
+    Keyboard,
+    Joystick,
+    Controller
 }
