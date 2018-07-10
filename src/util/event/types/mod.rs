@@ -263,6 +263,10 @@ pub enum KeyType {
 
 impl KeyType {
 
+    fn initKeyboardKeys() {
+
+    }
+
     fn keyboardKeys() -> Vec<KeyType> {
         vec![
             KeyType::Backspace,
